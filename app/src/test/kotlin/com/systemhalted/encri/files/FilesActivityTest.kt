@@ -3,17 +3,20 @@ package com.systemhalted.encri.files
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.ListView
 import android.widget.TextView
 import com.systemhalted.encri.client.EncriResult
 import com.systemhalted.encri.client.Failure
 import com.systemhalted.encri.client.VaultEvent
 import com.systemhalted.encri.files.browse.Browser
+import com.systemhalted.encri.files.browse.Previews
 import com.systemhalted.encri.files.link.Opener
 import com.systemhalted.encri.files.link.Opening
 import com.systemhalted.encri.files.link.VaultLink
@@ -36,6 +39,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.fakes.RoboMenu
 import org.robolectric.fakes.RoboMenuItem
 import org.robolectric.shadows.ShadowToast
+import kotlin.coroutines.EmptyCoroutineContext
 
 /** The application under test: the real link and browser over a stand-in for encri. */
 class TestApplication :
@@ -43,11 +47,16 @@ class TestApplication :
     Vaults {
     override lateinit var link: VaultLink
     override lateinit var browser: Browser
+    override lateinit var previews: Previews
 
     fun use(opener: Opener) {
         val scope = MainScope()
         link = VaultLink(opener, scope)
         browser = Browser(link, scope)
+        previews =
+            Previews(link, scope, decodeContext = EmptyCoroutineContext) {
+                Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
+            }
     }
 }
 
@@ -57,7 +66,7 @@ class FilesActivityTest {
     private val root = folder("root", "Vault", children = 2)
     private val photos = folder("photos", "Photos", "root", children = 1)
     private val notes = document("notes", "notes.txt", "root", sizeBytes = 2048)
-    private val beach = document("beach", "beach.jpg", "photos", "image/jpeg")
+    private val beach = document("beach", "beach.jpg", "photos", "image/jpeg", thumbnailable = true)
     private val session = FakeSession(root, mapOf("root" to listOf(notes, photos), "photos" to listOf(beach)))
 
     private fun start(vararg answers: Opening): ActivityController<FilesActivity> {
@@ -95,6 +104,49 @@ class FilesActivityTest {
         assertEquals(View.GONE, activity.message().visibility)
         assertEquals(View.GONE, activity.remedy().visibility)
         assertEquals("Encri Files", activity.title.toString())
+    }
+
+    private fun Activity.rowImage(position: Int): ImageView {
+        val row = list().adapter.getView(position, null, list()) as ViewGroup
+        settle()
+        return row.getChildAt(0) as ImageView
+    }
+
+    @Test
+    fun `a photo's row shows its preview, asked for at the row's size`() {
+        val activity = start(Opening.Open(session)).get()
+        activity.tap(0)
+        val image = activity.rowImage(0)
+        assertEquals(View.VISIBLE, image.visibility)
+        assertTrue(image.drawable != null)
+        val size = session.previewed.single().second
+        assertEquals(Triple("beach", size, size), session.previewed.single())
+    }
+
+    @Test
+    fun `a document encri cannot preview, and a folder, are not asked about`() {
+        val activity = start(Opening.Open(session)).get()
+        activity.rowImage(0)
+        activity.rowImage(1)
+        assertTrue(session.previewed.isEmpty())
+    }
+
+    @Test
+    fun `with previews off no row has a slot and nothing is asked for`() {
+        Settings(RuntimeEnvironment.getApplication()).previewsShown = false
+        val activity = start(Opening.Open(session)).get()
+        activity.tap(0)
+        assertEquals(View.GONE, activity.rowImage(0).visibility)
+        assertTrue(session.previewed.isEmpty())
+    }
+
+    @Test
+    fun `turning previews off in settings takes them off when the screen comes back`() {
+        val controller = start(Opening.Open(session))
+        controller.get().tap(0)
+        Settings(RuntimeEnvironment.getApplication()).previewsShown = false
+        controller.pause().resume()
+        assertEquals(View.GONE, controller.get().rowImage(0).visibility)
     }
 
     @Test

@@ -8,6 +8,8 @@ import com.systemhalted.encri.client.VaultEvent
 import com.systemhalted.encri.files.link.Opener
 import com.systemhalted.encri.files.link.Opening
 import com.systemhalted.encri.files.link.VaultSession
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 const val DIRECTORY = "vnd.android.document/directory"
@@ -27,7 +29,8 @@ fun document(
     mimeType: String = "text/plain",
     sizeBytes: Long = 0,
     modifiedMillis: Long = 0,
-) = EncriDocument(id, parentId, name, mimeType, false, sizeBytes, 0, modifiedMillis, null, false)
+    thumbnailable: Boolean = false,
+) = EncriDocument(id, parentId, name, mimeType, false, sizeBytes, 0, modifiedMillis, null, thumbnailable)
 
 /**
  * A session over an in-memory tree, standing in for encri's. Every request is recorded, and [failNext]
@@ -46,6 +49,14 @@ class FakeSession(
     var failNext: Failure? = null
     var handOffAnswer: EncriResult<Uri>? = null
 
+    /** Every preview asked for, as (document, width, height). */
+    val previewed = mutableListOf<Triple<String, Int, Int>>()
+    var previewAnswer: (String) -> EncriResult<ByteArray> = { EncriResult.Ok(byteArrayOf(1, 2, 3)) }
+
+    /** When set, a preview waits for it, so a test can cancel one in flight. */
+    var previewGate: CompletableDeferred<Unit>? = null
+    var previewsCancelled = 0
+
     override suspend fun list(folderId: String): EncriResult<List<EncriDocument>> {
         listed += folderId
         failNext?.let {
@@ -53,6 +64,21 @@ class FakeSession(
             return EncriResult.Failed(it, "told to")
         }
         return tree[folderId]?.let { EncriResult.Ok(it) } ?: EncriResult.Failed(Failure.NOT_FOUND, "no $folderId")
+    }
+
+    override suspend fun thumbnail(
+        documentId: String,
+        width: Int,
+        height: Int,
+    ): EncriResult<ByteArray> {
+        previewed += Triple(documentId, width, height)
+        try {
+            previewGate?.await()
+        } catch (cancelled: CancellationException) {
+            previewsCancelled++
+            throw cancelled
+        }
+        return previewAnswer(documentId)
     }
 
     override suspend fun handOff(documentId: String): EncriResult<Uri> {

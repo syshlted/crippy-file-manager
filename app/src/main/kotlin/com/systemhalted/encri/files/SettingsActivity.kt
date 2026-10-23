@@ -42,6 +42,12 @@ class SettingsActivity : Activity() {
 
     private fun build(): ScrollView {
         val pad = (PADDING_DP * resources.displayMetrics.density).toInt()
+        val previews =
+            Switch(this).apply {
+                setText(R.string.setting_previews)
+                isChecked = settings.previewsShown
+                setOnCheckedChangeListener { _, shown -> settings.previewsShown = shown }
+            }
         val screenshots =
             Switch(this).apply {
                 setText(R.string.setting_screenshots)
@@ -54,6 +60,8 @@ class SettingsActivity : Activity() {
         val column =
             LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
+                addView(previews)
+                addView(explanation(R.string.setting_previews_explain))
                 addView(screenshots)
                 addView(explanation(R.string.setting_screenshots_explain))
             }

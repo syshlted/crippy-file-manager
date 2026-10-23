@@ -5,6 +5,12 @@ than restating it.
 
 ## Unreleased
 
+### Previews — 2026-10-23
+
+**Completed (F4).** A photo or a video gets a preview in its row, made and encoded by encri, held in memory alone
+and dropped at every lock. *Show previews*, on by default, is in the settings screen and changes Encri Files alone;
+off, nothing is asked for. Checked on the A20 with a photo shared into encri from the Gallery app.
+
 ### A setting for screenshots — 2026-10-23
 
 **Completed (F3).** *Allow screenshots*, off by default, in a settings screen reached from the menu. It says what a

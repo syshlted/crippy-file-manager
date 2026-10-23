@@ -54,7 +54,8 @@ class FilesActivity :
         settings = Settings(this)
         window.followScreenshotSetting(settings.screenshotsAllowed)
         vaults = application as Vaults
-        views = FilesViews(this, this)
+        vaults.previews.enabled = settings.previewsShown
+        views = FilesViews(this, this, vaults.previews)
         viewer = Viewer(this, vaults.link)
         setContentView(views.root)
         ui.launch {
@@ -73,10 +74,14 @@ class FilesActivity :
         vaults.browser.reload()
     }
 
-    /** The setting may have changed while [SettingsActivity] was in front. */
+    /** The settings may have changed while [SettingsActivity] was in front. */
     override fun onResume() {
         super.onResume()
         window.followScreenshotSetting(settings.screenshotsAllowed)
+        if (vaults.previews.enabled != settings.previewsShown) {
+            vaults.previews.enabled = settings.previewsShown
+            views.refreshRows()
+        }
     }
 
     override fun onDestroy() {

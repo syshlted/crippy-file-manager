@@ -76,6 +76,14 @@ class VaultLink(
             }
     }
 
+    /** A preview of [documentId], or why there is none. */
+    suspend fun thumbnail(
+        documentId: String,
+        width: Int,
+        height: Int,
+    ): EncriResult<ByteArray> =
+        openSession()?.thumbnail(documentId, width, height) ?: EncriResult.Failed(Failure.ENDED, "no session")
+
     /** A URI another app may read [documentId] through, or why there is none. */
     suspend fun handOff(documentId: String): EncriResult<Uri> =
         openSession()?.handOff(documentId) ?: EncriResult.Failed(Failure.ENDED, "no session")

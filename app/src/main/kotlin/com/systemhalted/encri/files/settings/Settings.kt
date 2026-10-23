@@ -20,9 +20,18 @@ class Settings(
         get() = preferences.getBoolean(SCREENSHOTS, false)
         set(value) = preferences.edit().putBoolean(SCREENSHOTS, value).apply()
 
+    /**
+     * Whether this app shows previews: on unless the user turns it off (F4, encri D112). Off, it asks encri
+     * for none, so no picture of a document reaches this app at all.
+     */
+    var previewsShown: Boolean
+        get() = preferences.getBoolean(PREVIEWS, true)
+        set(value) = preferences.edit().putBoolean(PREVIEWS, value).apply()
+
     private companion object {
         const val FILE = "settings"
         const val SCREENSHOTS = "screenshots_allowed"
+        const val PREVIEWS = "previews_shown"
     }
 }
 

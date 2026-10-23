@@ -22,6 +22,16 @@ interface VaultSession : AutoCloseable {
     /** Every child of [folderId], in encri's order. */
     suspend fun list(folderId: String): EncriResult<List<EncriDocument>>
 
+    /**
+     * A preview of [documentId] that encri made and encoded, no larger than [width] by [height] (encri D112,
+     * D121). Only for a document encri marks thumbnailable.
+     */
+    suspend fun thumbnail(
+        documentId: String,
+        width: Int,
+        height: Int,
+    ): EncriResult<ByteArray>
+
     /** A `content://` URI that lets one other app read [documentId] (encri D117). */
     suspend fun handOff(documentId: String): EncriResult<Uri>
 

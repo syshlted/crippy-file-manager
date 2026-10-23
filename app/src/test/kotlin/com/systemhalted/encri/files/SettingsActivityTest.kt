@@ -21,9 +21,13 @@ import org.robolectric.fakes.RoboMenuItem
 class SettingsActivityTest {
     private val settings = Settings(RuntimeEnvironment.getApplication())
 
-    private fun SettingsActivity.screenshots(): Switch =
+    private fun SettingsActivity.switch(index: Int): Switch =
         ((findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup).getChildAt(0) as ViewGroup)
-            .getChildAt(0) as Switch
+            .getChildAt(index) as Switch
+
+    private fun SettingsActivity.previews(): Switch = switch(0)
+
+    private fun SettingsActivity.screenshots(): Switch = switch(2)
 
     private fun SettingsActivity.secure() = window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0
 
@@ -52,6 +56,16 @@ class SettingsActivityTest {
         val activity = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
         assertTrue(activity.screenshots().isChecked)
         assertFalse(activity.secure())
+    }
+
+    @Test
+    fun `previews are shown until the user turns them off, and the choice is kept`() {
+        val activity = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
+        assertTrue(activity.previews().isChecked)
+        activity.previews().isChecked = false
+        assertFalse(settings.previewsShown)
+        val again = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
+        assertFalse(again.previews().isChecked)
     }
 
     @Test

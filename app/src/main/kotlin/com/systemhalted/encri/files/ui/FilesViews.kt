@@ -2,14 +2,13 @@ package com.systemhalted.encri.files.ui
 
 import android.app.Activity
 import android.view.View
-import android.view.ViewGroup
-import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
 import com.systemhalted.encri.client.EncriDocument
 import com.systemhalted.encri.files.R
+import com.systemhalted.encri.files.browse.Previews
 
 /**
  * The browsing screen's views, built in code as encri's screens are, with no layout and no AndroidX
@@ -18,6 +17,7 @@ import com.systemhalted.encri.files.R
 class FilesViews(
     private val activity: Activity,
     private val actions: Actions,
+    previews: Previews,
 ) {
     interface Actions {
         fun onRemedy(remedy: Remedy)
@@ -27,7 +27,7 @@ class FilesViews(
 
     private val message = TextView(activity)
     private val remedyButton = Button(activity)
-    private val adapter = DocumentAdapter()
+    private val adapter = DocumentAdapter(activity, previews)
     private val list = ListView(activity)
 
     /** The remedy [remedyButton] offers, so a tap reports the one that was drawn. */
@@ -41,6 +41,7 @@ class FilesViews(
             padForSystemBars(pad)
             remedyButton.setOnClickListener { remedy?.let(actions::onRemedy) }
             list.adapter = adapter
+            list.setRecyclerListener(adapter::recycled)
             list.setOnItemClickListener { _, _, position, _ -> actions.onDocument(adapter.getItem(position)) }
             addView(message)
             addView(remedyButton)
@@ -57,42 +58,15 @@ class FilesViews(
         adapter.show(screen.documents)
     }
 
+    /** Draws every row again: whether previews are shown changed. */
+    fun refreshRows() = adapter.notifyDataSetChanged()
+
     private fun labelOf(remedy: Remedy): Int =
         when (remedy) {
             Remedy.ASK -> R.string.remedy_ask
             Remedy.UNLOCK -> R.string.remedy_unlock
             Remedy.RETRY -> R.string.remedy_retry
         }
-
-    /** One row per document: its name, and what [Rows.detail] says about it. */
-    private inner class DocumentAdapter : BaseAdapter() {
-        private var documents: List<EncriDocument> = emptyList()
-        private var nowMillis = 0L
-
-        fun show(documents: List<EncriDocument>) {
-            this.documents = documents
-            nowMillis = System.currentTimeMillis()
-            notifyDataSetChanged()
-        }
-
-        override fun getCount(): Int = documents.size
-
-        override fun getItem(position: Int): EncriDocument = documents[position]
-
-        override fun getItemId(position: Int): Long = position.toLong()
-
-        override fun getView(
-            position: Int,
-            convertView: View?,
-            parent: ViewGroup,
-        ): View {
-            val row = convertView ?: activity.layoutInflater.inflate(android.R.layout.simple_list_item_2, parent, false)
-            val document = documents[position]
-            row.findViewById<TextView>(android.R.id.text1).text = document.name
-            row.findViewById<TextView>(android.R.id.text2).text = Rows.detail(activity, document, nowMillis)
-            return row
-        }
-    }
 
     private companion object {
         const val PADDING_DP = 16

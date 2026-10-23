@@ -64,6 +64,12 @@ private class ClientSession(
 
     override suspend fun list(folderId: String): EncriResult<List<EncriDocument>> = session.list(folderId)
 
+    override suspend fun thumbnail(
+        documentId: String,
+        width: Int,
+        height: Int,
+    ): EncriResult<ByteArray> = session.thumbnail(documentId, width, height)
+
     override suspend fun handOff(documentId: String): EncriResult<Uri> {
         val handed = session.handOff(listOf(documentId))
         val uri = (handed as? EncriResult.Ok)?.value?.singleOrNull()
