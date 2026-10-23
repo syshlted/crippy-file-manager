@@ -2,4 +2,38 @@
 <resources>
     <!-- The launcher name, for now (AGENTS.md F1). encri's own label is lower case (encri D124). -->
     <string name="app_name">Encri Files</string>
+
+    <string name="connecting">Connecting to encri…</string>
+    <string name="locked">The vault is locked.</string>
+    <string name="not_authorized">Encri Files has not been let into your vault yet, or was let in before this version was installed. encri asks you, on its own screen, what this app may see.</string>
+    <string name="access_off">Other apps are not allowed into the vault: that is turned off in encri. encri can turn it on when it asks you about this app.</string>
+    <string name="not_installed">encri is not installed. Encri Files shows what is in an encri vault, so it needs encri on this phone.</string>
+    <string name="not_trusted">The encri on this phone is not signed by a key this app trusts, so this app will not talk to it. The SHA-256 of its certificate is %1$s.</string>
+    <string name="too_old">The encri on this phone is too old for this app. It speaks version %1$d of the protocol apps use to reach it. Update encri.</string>
+    <string name="unavailable">encri could not be reached.</string>
+
+    <string name="loading">Loading…</string>
+    <string name="empty_folder">This folder is empty.</string>
+    <string name="folder_gone">This folder is no longer in the vault.</string>
+    <string name="session_ended">encri ended the session.</string>
+    <string name="list_failed">This folder could not be listed.</string>
+
+    <string name="remedy_ask">Ask encri</string>
+    <string name="remedy_unlock">Unlock</string>
+    <string name="remedy_retry">Try again</string>
+
+    <string name="menu_lock">Lock the vault</string>
+    <string name="menu_reload">Refresh</string>
+
+    <string name="folder">Folder</string>
+    <plurals name="folder_items">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+    <!-- A document's size, then when it was last changed: "1.2 MB · 3 days ago". -->
+    <string name="document_line">%1$s · %2$s</string>
+
+    <string name="not_let_in">Encri Files was not let in.</string>
+    <string name="handoff_failed">encri would not hand this document to another app.</string>
+    <string name="no_viewer">No app on this phone opens %1$s.</string>
 </resources>

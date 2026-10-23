@@ -5,7 +5,7 @@
 
 ## What this is
 
-**encri's file manager**: an Android app that will browse an encri vault and hand its documents to other
+**encri's file manager**: an Android app that browses an encri vault and hands its documents to other
 apps. It reaches the vault only through encri's companion service over AIDL, never through the system
 file picker (encri D112). So it works with encri's file-picker access off, which is how every vault
 starts (encri D47), and Android keeps no record of which document went to which app.
@@ -20,8 +20,10 @@ owns is the app.
 
 ## Status
 
-**Scaffolded (2026-10-23).** The Gradle project builds, the gates run and the hooks are installed (F1).
-There is no screen yet. Nothing is pushed, and nothing has been released.
+**Scaffolded, and the first screen works (2026-10-23).** It connects to encri, asks the user to let it
+in on encri's own screen, unlocks the vault on encri's unlock screen, lists the vault a folder at a time,
+and opens a document with another app through a handoff (F2). It reads and does nothing else: no
+previews, no writes, no sharing yet. Nothing is pushed, and nothing has been released.
 
 ## Relationship to encri and encri-api
 
@@ -129,13 +131,77 @@ not. Line rather than branch, as encri's `:provider` gate is.
 1. **No AndroidX**, so every screen is framework views written by hand, and predictive back, insets and
    results use the platform's APIs directly.
 
+### F2 — The first screen: one session for the process, reading alone, and nothing shown while locked
+*2026-10-23 · accepted; **flagged for veto on two points** (below)*
+
+`FilesActivity` connects to encri, opens a session, lists the folder the user let it into, goes into
+folders and back out, and opens a document with another app. Seven choices decide how.
+
+**The session belongs to the process, not to the screen.** `FilesApplication` holds the `VaultLink` and
+the `Browser`, and a screen draws them. A handoff ends when the session that made it ends (encri D117),
+so a session owned by the Activity would close a document another app is showing whenever the phone
+turned. A session encri ends — the user turned this app out, turned access for other apps off, or
+encri's process went — is asked for again at once, so the screen says why there is no session instead
+of showing a vault that is gone. *Rejected:* `configChanges` to keep the Activity alive through a
+rotation, which covers rotation and nothing else.
+
+**It asks to read, and for nothing more.** Reading is all this version does, and the consent screen
+lists what an app asks for (encri D114); rights nothing exercises are rights a user has no reason to
+grant. Asking for more later costs nothing extra, because encri already asks again whenever this app is
+updated (encri D120, flagged there).
+
+**While the vault is locked, the screen shows nothing of it**: no document, and no folder's name in the
+title. A user who locks the vault expects its names off the screen, as encri's file picker takes them off
+(encri D17). The place is kept in memory and an unlock lists it again, because the session outlives the
+lock (encri D120) and the names are already in this process.
+
+**`FLAG_SECURE` on the window**, for encri's reason (encri D8): the screen shows the names of what is in
+the vault, and a screenshot or the recents thumbnail would keep them outside it.
+
+**Opening a document is a handoff and `ACTION_VIEW`**, with `FLAG_GRANT_READ_URI_PERMISSION`, through
+the platform's own resolver rather than a chooser, so a user can set a default app for a type. The URI
+names neither the document nor its id (encri D117). A remedy — *Ask encri*, *Unlock*, *Try again* — is a
+button the user presses: nothing here starts one of encri's screens on its own (encri D17's rule that a
+prompt starts with the user).
+
+**Folders first, then names as the phone's language sorts them**, with `java.text.Collator`. encri
+lists in its catalog's byte order, which puts `Zebra` before `apple`.
+
+**The folder is listed again whenever the screen comes to the front**, as well as when encri says it
+changed. encri's notice of a change is best effort (encri-api's `PROTOCOL.md`), and the first device run
+showed how far: a document saved through encri's own share screen arrived with no notice at all, which is
+encri's B111. A user coming back to the screen should not see what was there when they left it, and one
+listing per return is the price.
+
+**Smaller choices.** Back goes up a folder before it leaves: through `OnBackInvokedCallback` from API 33,
+opted into in the manifest so every ROM uses it rather than only API 36, and through `onBackPressed`
+below. A message encri meant for a developer never reaches the screen (encri-api's `PROTOCOL.md`).
+
+**Verified.** 57 test cases, 76 runs with the screens at both API 27 and 36 under Robolectric, and
+91% of lines. Removing the listing on return fails its test at both levels. **On the Galaxy A20 (API 30),
+against encri's debug build:** with no vault, encri answered *locked* and its own screen created one; the
+consent screen named the app from the system and listed reading alone; the whole vault was allowed; a note
+shared into encri's *Received* folder listed and opened in HTML Viewer, another app, which read its name and
+its content through the handoff; locking from the menu left no name on screen, and the unlock on encri's
+screen came straight back to *Received*; a rotation kept the place and the session; Up and back went up, and
+back at the top left. **Not run on a phone:** the API 33+ back callback, which Robolectric only registers;
+and the G6, the S9 and the S24.
+
+**Flagged for veto:**
+
+1. **Reading alone**, so the update that adds writing asks the user again, as every update does today.
+2. **`FLAG_SECURE`**, which also stops a user taking a screenshot of their own folder.
+
 ---
 
 ## Open questions
 
 - **The visible name.** "Encri Files" is for now (F1).
+- **Whether handoffs should be revoked sooner** than encri ends them. Every document opened mints one,
+  and each lasts until the vault locks or the session ends (encri D117). Revoking the previous one when
+  another is made would break a viewer the user went back to.
 
 ## Build order
 
-1. ~~Scaffold.~~ **Done 2026-10-23** — F1.
+1. ~~Scaffold and the first screen.~~ **Done 2026-10-23** — F1, F2.
 2. Everything after is in `ROADMAP.md`.

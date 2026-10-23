@@ -5,7 +5,8 @@ companion service, using the [encri-api](https://github.com/syshlted/encri-api) 
 through Android's file picker: so it works with encri's file-picker access turned off, and Android keeps
 no record of which document went to which app.
 
-**Pre-release. Nothing is published.** Today it is a scaffold, with no screen yet. See [`ROADMAP.md`](ROADMAP.md) for what comes next and [`AGENTS.md`](AGENTS.md) for why
+**Pre-release. Nothing is published.** Today it lists the vault a folder at a time and opens a document
+with another app. See [`ROADMAP.md`](ROADMAP.md) for what comes next and [`AGENTS.md`](AGENTS.md) for why
 it is built the way it is.
 
 It is also an example: everything it does, any app can do with the same library, and it is licensed so

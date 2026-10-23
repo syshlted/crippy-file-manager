@@ -9,17 +9,23 @@ answer a user cannot tell from a right one · **S3** wrong under a narrow race, 
 
 ## Now
 
-The scaffold is done (F1). What follows is encri's step 13 for the file manager (encri D112 to D118,
-D123), in order.
+The scaffold and the first screen are done (F1, F2): connect, ask, unlock, browse, and open with another
+app. What follows is encri's step 13 for the file manager (encri D112 to D118, D123), in order.
 
-1. **The first screen**: connect to encri, ask the user to let this app in on encri's own screen, unlock
-   the vault on encri's unlock screen, list the vault a folder at a time, and open a document with another
-   app through a handoff (encri D117).
-2. **Previews**, with a toggle of this app's own, on by default (encri D112), in memory only.
-3. **Writing**: a new folder, rename, delete and move.
-4. **Copying in and out**, saying that a copy out is plaintext in another app's storage (encri D123).
-5. **Sharing out** through a handoff and the share sheet (encri D118).
-6. **encri's backup screens, by their public actions** (encri D123), once encri gives them actions.
+1. **Previews**, with a toggle of this app's own, on by default, saying it changes this app alone (encri
+   D112). Previews live in memory only and are never written to disk; encri encodes them, and this app
+   never decodes an original. Asked for at the size a row needs, through the client's `thumbnail`.
+2. **Writing**: a new folder, rename, delete and move. Each needs a right this version does not ask for,
+   so the version that adds them asks the user again (F2).
+3. **Copying in and out.** In: a file chosen in the system picker, written into the vault through the
+   session. Out: a document written to a place the user picks, with a sentence before it saying that the
+   copy is plaintext in another app's storage (invariant 2 in encri; encri D123).
+4. **Sharing out** through a handoff and the share sheet (encri D118), saying that the app it reaches may
+   read it later, after the vault has locked, and find it gone.
+5. **encri's backup screens, by their public actions** (encri D123): *Back up*, *Save a backup file* and
+   *Restore*. Waits for encri to give the three screens their actions, which is encri's step 13 item 6.
+6. **Device tests against encri**, as encri-api's L13 runs them: install encri, let the test in, and drive
+   this app's screen from another process. The first run was by hand on the A20 (F2).
 7. **The visible name.** "Encri Files" is for now (F1).
 
 ## Before the first release
@@ -39,4 +45,5 @@ D123), in order.
 
 ## Bug queue
 
-Empty.
+Empty. B111 in encri's roadmap — a share saved through encri tells no app that a folder changed — was
+found by this app's first device run, and is encri's to fix.
