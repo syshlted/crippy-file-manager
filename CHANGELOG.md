@@ -5,6 +5,11 @@ than restating it.
 
 ## Unreleased
 
+### A setting for screenshots — 2026-10-23
+
+**Completed (F3).** *Allow screenshots*, off by default, in a settings screen reached from the menu. It says what a
+screenshot of the vault costs, and that it changes Encri Files alone. Checked with `screencap` on the A20.
+
 ### The first screen — 2026-10-23
 
 **Completed (F2).** The app connects to encri, asks the user to let it in on encri's consent screen,

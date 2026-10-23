@@ -17,6 +17,7 @@ import com.systemhalted.encri.files.browse.Browser
 import com.systemhalted.encri.files.link.Opener
 import com.systemhalted.encri.files.link.Opening
 import com.systemhalted.encri.files.link.VaultLink
+import com.systemhalted.encri.files.settings.Settings
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -100,6 +101,34 @@ class FilesActivityTest {
     fun `nothing on the screen reaches a screenshot or the recents thumbnail`() {
         val activity = start(Opening.Open(session)).get()
         assertNotEquals(0, activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    @Test
+    fun `screenshots the user allowed are allowed`() {
+        Settings(RuntimeEnvironment.getApplication()).screenshotsAllowed = true
+        val activity = start(Opening.Open(session)).get()
+        assertEquals(0, activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    @Test
+    fun `a change made in settings applies when the screen comes back`() {
+        val controller = start(Opening.Open(session))
+        Settings(RuntimeEnvironment.getApplication()).screenshotsAllowed = true
+        controller.pause().resume()
+        assertEquals(
+            0,
+            controller
+                .get()
+                .window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE,
+        )
+    }
+
+    @Test
+    fun `settings are in the menu whatever state the vault is in`() {
+        val activity = start(Opening.NotInstalled).get()
+        assertTrue(activity.menu().findItem(FilesActivity.MENU_SETTINGS).isVisible)
+        activity.onOptionsItemSelected(RoboMenuItem(FilesActivity.MENU_SETTINGS))
+        assertEquals(SettingsActivity::class.java.name, shadowOf(activity).nextStartedActivity.component?.className)
     }
 
     @Test

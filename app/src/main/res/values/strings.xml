@@ -33,6 +33,10 @@
     <!-- A document's size, then when it was last changed: "1.2 MB · 3 days ago". -->
     <string name="document_line">%1$s · %2$s</string>
 
+    <string name="settings">Settings</string>
+    <string name="setting_screenshots">Allow screenshots</string>
+    <string name="setting_screenshots_explain">When this is off, Android blocks screenshots and screen recordings of Encri Files, keeps it off any screen you cast to, and shows a blank card for it among your recent apps. When it is on, anything this app shows, such as the names of what is in your vault, can be captured, and a screenshot is kept in your photos, outside the vault, where photo backups and other apps can reach it. This changes Encri Files alone: encri\'s own screens always block screenshots.</string>
+
     <string name="not_let_in">Encri Files was not let in.</string>
     <string name="handoff_failed">encri would not hand this document to another app.</string>
     <string name="no_viewer">No app on this phone opens %1$s.</string>

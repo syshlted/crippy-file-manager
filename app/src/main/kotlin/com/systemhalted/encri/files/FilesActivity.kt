@@ -8,13 +8,14 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.WindowManager
 import android.widget.Toast
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import com.systemhalted.encri.client.Encri
 import com.systemhalted.encri.client.EncriDocument
 import com.systemhalted.encri.client.Right
+import com.systemhalted.encri.files.settings.Settings
+import com.systemhalted.encri.files.settings.followScreenshotSetting
 import com.systemhalted.encri.files.ui.FilesViews
 import com.systemhalted.encri.files.ui.Remedy
 import com.systemhalted.encri.files.ui.Screen
@@ -30,8 +31,9 @@ import kotlinx.coroutines.launch
  * The screen draws [Screen.of] and turns taps into requests. The session and the user's place are the
  * application's ([Vaults]), so turning the phone round neither ends the session nor loses the place.
  *
- * **FLAG_SECURE**, for encri's reason (encri D8): this screen shows the names of what is in the vault,
- * and a screenshot or the recents thumbnail would keep them outside it.
+ * **Screenshots are blocked unless the user allows them in [SettingsActivity]** (F3), for encri's reason
+ * (encri D8): this screen shows the names of what is in the vault, and a screenshot or the recents
+ * thumbnail would keep them outside it.
  */
 @Suppress("TooManyFunctions") // Eight are the platform's lifecycle, menu, result and back callbacks.
 class FilesActivity :
@@ -41,6 +43,7 @@ class FilesActivity :
     private lateinit var vaults: Vaults
     private lateinit var views: FilesViews
     private lateinit var viewer: Viewer
+    private lateinit var settings: Settings
     private var screen = Screen(R.string.connecting)
 
     // A callback only from API 33, where predictive back replaced onBackPressed (see onBackPressed).
@@ -48,7 +51,8 @@ class FilesActivity :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        settings = Settings(this)
+        window.followScreenshotSetting(settings.screenshotsAllowed)
         vaults = application as Vaults
         views = FilesViews(this, this)
         viewer = Viewer(this, vaults.link)
@@ -69,6 +73,12 @@ class FilesActivity :
         vaults.browser.reload()
     }
 
+    /** The setting may have changed while [SettingsActivity] was in front. */
+    override fun onResume() {
+        super.onResume()
+        window.followScreenshotSetting(settings.screenshotsAllowed)
+    }
+
     override fun onDestroy() {
         ui.cancel()
         super.onDestroy()
@@ -86,6 +96,7 @@ class FilesActivity :
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menu.add(Menu.NONE, MENU_RELOAD, Menu.NONE, R.string.menu_reload)
         menu.add(Menu.NONE, MENU_LOCK, Menu.NONE, R.string.menu_lock)
+        menu.add(Menu.NONE, MENU_SETTINGS, Menu.NONE, R.string.settings)
         return true
     }
 
@@ -100,6 +111,7 @@ class FilesActivity :
             android.R.id.home -> vaults.browser.up()
             MENU_RELOAD -> vaults.browser.reload()
             MENU_LOCK -> vaults.link.lock()
+            MENU_SETTINGS -> startActivity(Intent(this, SettingsActivity::class.java))
             else -> return super.onOptionsItemSelected(item)
         }
         return true
@@ -190,5 +202,6 @@ class FilesActivity :
         private const val REQUEST_UNLOCK = 2
         const val MENU_RELOAD = 1
         const val MENU_LOCK = 2
+        const val MENU_SETTINGS = 3
     }
 }

@@ -12,8 +12,8 @@ answer a user cannot tell from a right one · **S3** wrong under a narrow race, 
 The scaffold and the first screen are done (F1, F2): connect, ask, unlock, browse, and open with another
 app. What follows is encri's step 13 for the file manager (encri D112 to D118, D123), in order.
 
-1. **Previews**, with a toggle of this app's own, on by default, saying it changes this app alone (encri
-   D112). Previews live in memory only and are never written to disk; encri encodes them, and this app
+1. **Previews**, with a toggle of this app's own in the settings screen F3 added, on by default, saying it
+   changes this app alone (encri D112). Previews live in memory only and are never written to disk; encri encodes them, and this app
    never decodes an original. Asked for at the size a row needs, through the client's `thumbnail`.
 2. **Writing**: a new folder, rename, delete and move. Each needs a right this version does not ask for,
    so the version that adds them asks the user again (F2).
