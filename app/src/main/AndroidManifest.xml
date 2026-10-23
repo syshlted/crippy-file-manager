@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      No permissions of its own. The file manager reaches the vault through encri's companion service
+      (encri D112, D120), which needs none, and the client library merges the one `<queries>` entry
+      that lets this app see encri from API 30 (encri-api L12).
+
+      allowBackup is false for encri's reason (encri D8): nothing this app keeps should leave the
+      phone through a backup transport the user never chose. Today it keeps nothing.
+    -->
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:supportsRtl="true" />
+</manifest>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The launcher name, for now (AGENTS.md F1). encri's own label is lower case (encri D124). -->
+    <string name="app_name">Encri Files</string>
+</resources>
