@@ -5,6 +5,14 @@ than restating it.
 
 ## Unreleased
 
+### Sharing out — 2026-10-23
+
+**Completed (F7).** *Share* on a document's long press says what a share costs, then hands the document to the share
+sheet through a handoff. Checked on the A20: Nextcloud uploaded a shared document to the test server byte for byte.
+
+**Bug found and fixed before it shipped.** The share sheet offered encri itself, whose share screen refuses its own
+documents. encri is left out of the sheet.
+
 ### Copying in and out — 2026-10-23
 
 **Completed (F6).** *Copy files in* in the menu takes any number of files from the system's picker into the folder

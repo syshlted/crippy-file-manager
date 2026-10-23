@@ -120,6 +120,12 @@
     <string name="reason_stopped">It was stopped.</string>
     <string name="reason_folder_gone">The folder is no longer in the vault.</string>
 
+    <!-- F7: sharing a document out of the vault through the share sheet. -->
+    <string name="action_share">Share</string>
+    <string name="share_title">Share “%1$s”?</string>
+    <string name="share_explain">The app you choose next gets what is in it, not encrypted, and can keep a copy: Encri Files cannot take it back, and deleting the document from the vault later does not delete that copy. The app reads it from the vault, so if it waits to read until after the vault locks or Encri Files is closed, it will find nothing.</string>
+    <string name="no_sharer">No app on this phone can share.</string>
+
     <string name="not_let_in">Encri Files was not let in.</string>
     <string name="handoff_failed">encri would not hand this document to another app.</string>
     <string name="no_viewer">No app on this phone opens %1$s.</string>

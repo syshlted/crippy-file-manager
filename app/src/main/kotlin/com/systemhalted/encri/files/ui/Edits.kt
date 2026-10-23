@@ -3,7 +3,6 @@ package com.systemhalted.encri.files.ui
 import android.app.Activity
 import android.app.AlertDialog
 import android.text.InputType
-import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -14,13 +13,12 @@ import com.systemhalted.encri.files.R
 import com.systemhalted.encri.files.Vaults
 import com.systemhalted.encri.files.link.VaultSession
 import com.systemhalted.encri.files.settings.Settings
-import com.systemhalted.encri.files.settings.followScreenshotSetting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
  * The changes a user makes to the vault from this app: a new folder, a rename, a move and a delete
- * (AGENTS.md F5), and the copy out a long press offers beside them (F6).
+ * (AGENTS.md F5), and the share (F7) and copy out (F6) a long press offers beside them.
  *
  * Each is one request to encri, which checks the right and the name itself (encri D120), so nothing here
  * decides whether a change is allowed: it offers what the session's rights cover and reports what encri
@@ -35,10 +33,13 @@ class Edits(
     private val vaults: Vaults,
     private val settings: Settings,
     private val scope: CoroutineScope,
-    /** Asks the system's picker where a copy of the document goes, once the user has read what that costs. */
-    private val copyOut: (EncriDocument) -> Unit,
+    /** What leaves the vault from a long press, each said before it happens. */
+    private val outgoing: Outgoing,
 ) {
-    /** What [document] offers: as far as [rights] allow, and a copy out when [canCopy] and it is not a folder. */
+    /**
+     * What [document] offers: a share and, when [canCopy], a copy out, for a document rather than a folder; and as
+     * far as [rights] allow, the changes.
+     */
     fun offer(
         document: EncriDocument,
         rights: Set<Right>,
@@ -46,7 +47,12 @@ class Edits(
     ) {
         val actions =
             buildList {
-                if (canCopy && !document.isFolder) add(R.string.action_copy_out to { confirmCopyOut(document) })
+                if (!document.isFolder) add(R.string.action_share to { outgoing.confirmShare(document) })
+                if (canCopy &&
+                    !document.isFolder
+                ) {
+                    add(R.string.action_copy_out to { outgoing.confirmCopyOut(document) })
+                }
                 if (Right.WRITE in rights) add(R.string.action_rename to { rename(document) })
                 if (Right.MOVE in rights) add(R.string.action_move to { vaults.browser.startMove(document) })
                 if (Right.DELETE in rights) add(R.string.action_delete to { confirmDelete(document) })
@@ -80,20 +86,6 @@ class Edits(
         askName(Operation.RENAME, R.string.rename, document.name, R.string.action_rename) { name ->
             if (name != document.name) change(Operation.RENAME) { it.rename(document.id, name) }
         }
-
-    /**
-     * Says, before anything leaves, that the copy is plaintext in another app's keeping (encri D123), and only
-     * then asks the picker where it goes.
-     */
-    private fun confirmCopyOut(document: EncriDocument) =
-        show(
-            AlertDialog
-                .Builder(activity)
-                .setTitle(activity.getString(R.string.copy_out_title, document.name))
-                .setMessage(R.string.copy_out_explain)
-                .setPositiveButton(R.string.copy_out_choose) { _, _ -> copyOut(document) }
-                .setNegativeButton(android.R.string.cancel, null),
-        )
 
     private fun confirmDelete(document: EncriDocument) {
         val explain = if (document.isFolder) R.string.delete_folder_explain else R.string.delete_document_explain
@@ -175,12 +167,7 @@ class Edits(
     private fun show(
         builder: AlertDialog.Builder,
         typing: Boolean = false,
-    ) {
-        val dialog = builder.create()
-        dialog.window?.followScreenshotSetting(settings.screenshotsAllowed)
-        if (typing) dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-        dialog.show()
-    }
+    ) = builder.showFollowing(settings, typing)
 
     private companion object {
         const val PADDING_DP = 24

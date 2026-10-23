@@ -6,7 +6,7 @@ through Android's file picker: so it works with encri's file-picker access turne
 no record of which document went to which app.
 
 **Pre-release. Nothing is published.** Today it lists the vault a folder at a time, opens a document
-with another app, makes and changes folders, and copies files in and out. See [`ROADMAP.md`](ROADMAP.md) for what comes next and [`AGENTS.md`](AGENTS.md) for why
+with another app, makes and changes folders, copies files in and out, and shares a document. See [`ROADMAP.md`](ROADMAP.md) for what comes next and [`AGENTS.md`](AGENTS.md) for why
 it is built the way it is.
 
 It is also an example: everything it does, any app can do with the same library, and it is licensed so

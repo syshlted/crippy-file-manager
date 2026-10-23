@@ -21,9 +21,10 @@ import com.systemhalted.encri.files.settings.followScreenshotSetting
 import com.systemhalted.encri.files.transfer.Transfer
 import com.systemhalted.encri.files.ui.Edits
 import com.systemhalted.encri.files.ui.FilesViews
+import com.systemhalted.encri.files.ui.Handoffs
+import com.systemhalted.encri.files.ui.Outgoing
 import com.systemhalted.encri.files.ui.Remedy
 import com.systemhalted.encri.files.ui.Screen
-import com.systemhalted.encri.files.ui.Viewer
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
@@ -51,7 +52,7 @@ class FilesActivity :
     private val ui = MainScope()
     private lateinit var vaults: Vaults
     private lateinit var views: FilesViews
-    private lateinit var viewer: Viewer
+    private lateinit var handoffs: Handoffs
     private lateinit var settings: Settings
     private lateinit var edits: Edits
     private var screen = Screen(R.string.connecting)
@@ -66,8 +67,9 @@ class FilesActivity :
         vaults = application as Vaults
         vaults.previews.enabled = settings.previewsShown
         views = FilesViews(this, this, vaults.previews)
-        viewer = Viewer(this, vaults.link)
-        edits = Edits(this, vaults, settings, ui, ::chooseWhereToCopy)
+        handoffs = Handoffs(this, vaults.link)
+        val outgoing = Outgoing(this, settings, ::chooseWhereToCopy) { ui.launch { handoffs.share(it) } }
+        edits = Edits(this, vaults, settings, ui, outgoing)
         setContentView(views.root)
         ui.launch {
             combine(
@@ -288,7 +290,7 @@ class FilesActivity :
         if (document.isFolder) {
             vaults.browser.enter(document)
         } else {
-            ui.launch { viewer.open(document) }
+            ui.launch { handoffs.open(document) }
         }
     }
 

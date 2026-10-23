@@ -16,8 +16,7 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 2. ~~**Writing**: a new folder, rename, delete and move.~~ **Done 2026-10-23 (F5)**, asking for every right.
 3. ~~**Copying in and out.**~~ **Done 2026-10-23 (F6).** Folders and several documents out at once are not
    built; see F6.
-4. **Sharing out** through a handoff and the share sheet (encri D118), saying that the app it reaches may
-   read it later, after the vault has locked, and find it gone.
+4. ~~**Sharing out**~~ **Done 2026-10-23 (F7)**, one document at a time.
 5. **encri's backup screens, by their public actions** (encri D123): *Back up*, *Save a backup file* and
    *Restore*. Waits for encri to give the three screens their actions, which is encri's step 13 item 6.
 6. **Device tests against encri**, as encri-api's L13 runs them: install encri, let the test in, and drive
@@ -28,7 +27,8 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 
 - **A copy that keeps going while another app is in front** (S3, F6's first flag): a `dataSync` foreground service,
   which is this app's first permission. Until then a long copy may pause or stop when the user leaves.
-- **Copying a folder, or several documents out at once**, which F6 left out.
+- **Choosing several documents at once**, to copy out or share them together, which F6 and F7 left out; and
+  copying a folder.
 
 ## Before the first release
 

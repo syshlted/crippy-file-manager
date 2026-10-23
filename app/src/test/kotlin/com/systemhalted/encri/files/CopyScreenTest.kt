@@ -161,7 +161,7 @@ class CopyScreenTest {
     fun `a document offers a copy out, and a folder does not`() {
         val activity = start(Opening.Open(session)).get()
         activity.hold(1)
-        assertEquals("Copy out of the vault", shadowOf(dialog()).items.first().toString())
+        assertTrue(shadowOf(dialog()).items.map(CharSequence::toString).contains("Copy out of the vault"))
         dialog().dismiss()
         activity.hold(0)
         assertFalse(shadowOf(dialog()).items.map(CharSequence::toString).contains("Copy out of the vault"))
