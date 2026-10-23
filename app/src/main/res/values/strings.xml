@@ -32,6 +32,7 @@
     </plurals>
     <!-- A document's size, then when it was last changed: "1.2 MB · 3 days ago". -->
     <string name="document_line">%1$s · %2$s</string>
+    <string name="just_now">just now</string>
 
     <string name="settings">Settings</string>
     <string name="setting_previews">Show previews</string>

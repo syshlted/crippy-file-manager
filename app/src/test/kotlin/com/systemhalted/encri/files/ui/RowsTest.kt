@@ -27,6 +27,15 @@ class RowsTest {
     }
 
     @Test
+    fun `a document changed under a minute ago says just now, not 0 minutes ago`() {
+        val now = 10 * DateUtils.DAY_IN_MILLIS
+        val doc = document("d", "d.txt", sizeBytes = 2048, modifiedMillis = now - 59_000)
+        val size = Formatter.formatShortFileSize(context, 2048)
+        assertEquals("$size · just now", Rows.detail(context, doc, now))
+        assertEquals("$size · just now", Rows.detail(context, doc.copy(modifiedMillis = now + 30_000), now))
+    }
+
+    @Test
     fun `a document says its size and when it last changed`() {
         val now = 10 * DateUtils.DAY_IN_MILLIS
         val doc = document("d", "d.txt", sizeBytes = 2048, modifiedMillis = now - 3 * DateUtils.DAY_IN_MILLIS)

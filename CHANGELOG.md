@@ -11,6 +11,9 @@ than restating it.
 and dropped at every lock. *Show previews*, on by default, is in the settings screen and changes Encri Files alone;
 off, nothing is asked for. Checked on the A20 with a photo shared into encri from the Gallery app.
 
+**Bug found and fixed.** A document changed under a minute ago read *0 minutes ago* on the A20, as encri's own
+screens once did (its B98). It reads *just now*.
+
 ### A setting for screenshots — 2026-10-23
 
 **Completed (F3).** *Allow screenshots*, off by default, in a settings screen reached from the menu. It says what a
