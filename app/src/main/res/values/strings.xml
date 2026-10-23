@@ -83,7 +83,23 @@
     <string name="copied_bytes">%1$s of %2$s</string>
     <string name="copied_bytes_so_far">%1$s so far</string>
     <string name="copying_keep_open">Keep Encri Files open until it finishes: Android may pause or stop it while another app is in front.</string>
+    <string name="copying_carries_on">You can leave Encri Files: the copy carries on until it is done, or until the vault locks.</string>
     <string name="transfer_stop">Stop</string>
+
+    <!-- F8: the notification a copy runs behind. Counts, never a name: it is read off a locked screen. -->
+    <string name="transfer_channel">Copies</string>
+    <string name="transfer_channel_explain">How far a copy into or out of the vault has got, and how it ended. These never name a file.</string>
+    <!-- The notification's title for the moment before a copy says which way it goes. -->
+    <string name="copying_starting">Copying…</string>
+    <plurals name="transfer_notice_copied_in">
+        <item quantity="one">Copied %d file into the vault</item>
+        <item quantity="other">Copied %d files into the vault</item>
+    </plurals>
+    <string name="transfer_notice_copied_in_some">Copied %1$d of %2$d files into the vault</string>
+    <string name="transfer_notice_copied_in_none">Nothing was copied into the vault</string>
+    <string name="transfer_notice_copied_out">Copied a document out of the vault</string>
+    <string name="transfer_notice_copy_out_failed">A document was not copied out of the vault</string>
+    <string name="transfer_notice_see_why">Open Encri Files to see what happened.</string>
     <plurals name="copied_in">
         <item quantity="one">Copied %d file into the vault.</item>
         <item quantity="other">Copied %d files into the vault.</item>

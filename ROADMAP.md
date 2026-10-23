@@ -25,8 +25,9 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 
 ## Later
 
-- **A copy that keeps going while another app is in front** (S3, F6's first flag): a `dataSync` foreground service,
-  which is this app's first permission. Until then a long copy may pause or stop when the user leaves.
+- ~~**A copy that keeps going while another app is in front** (S3, F6's first flag): a `dataSync` foreground service,
+  which is this app's first permission. Until then a long copy may pause or stop when the user leaves.~~ **Done
+  2026-10-23 (F8).**
 - **Choosing several documents at once**, to copy out or share them together, which F6 and F7 left out; and
   copying a folder.
 

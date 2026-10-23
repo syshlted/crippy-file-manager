@@ -40,6 +40,16 @@ class TransferWordsTest {
     }
 
     @Test
+    fun `a copy the service holds says it carries on when the user leaves, instead of asking them to stay`() {
+        val words = said(Transfer.Running(Direction.IN, 0, 1, 0, null, held = true))
+        assertEquals(
+            "Copying 1 of 1 into the vault…\n" +
+                "You can leave Encri Files: the copy carries on until it is done, or until the vault locks.",
+            words,
+        )
+    }
+
+    @Test
     fun `a copy whose total is unknown says how much so far, and nothing before it starts`() {
         assertTrue(said(Transfer.Running(Direction.IN, 0, 1, 5_000_000, null)).contains("5.0 MB so far"))
         assertFalse(said(Transfer.Running(Direction.IN, 0, 1, 0, null)).contains("so far"))

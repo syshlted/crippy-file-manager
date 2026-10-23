@@ -9,6 +9,7 @@ import com.systemhalted.encri.files.document
 import com.systemhalted.encri.files.folder
 import com.systemhalted.encri.files.link.Opening
 import com.systemhalted.encri.files.link.VaultLink
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -48,6 +49,50 @@ class TransfersTest {
     private fun names(): List<String> = session.tree.getValue("root").map { it.name }
 
     private fun bytes(size: Int): ByteArray = ByteArray(size) { (it % 251).toByte() }
+
+    // ---- Held, and watched (F8) ----------------------------------------------------------------
+
+    @Test
+    fun `a copy said to be held stays held as it moves, and the next copy starts unheld`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val transfers = transfers()
+            session.writeGate = CompletableDeferred()
+            transfers.copyIn("root", listOf(outside.add("a.txt", bytes(10))))
+            transfers.hold(true)
+            assertTrue((transfers.state.value as Transfer.Running).held)
+            session.writeGate!!.complete(Unit)
+            assertTrue(transfers.state.value is Transfer.Finished)
+            session.writeGate = CompletableDeferred()
+            transfers.copyIn("root", listOf(outside.add("b.txt", bytes(10))))
+            assertFalse((transfers.state.value as Transfer.Running).held)
+            session.writeGate!!.complete(Unit)
+        }
+
+    @Test
+    fun `held changes nothing once a copy has ended`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val transfers = transfers()
+            transfers.copyIn("root", listOf(outside.add("a.txt", bytes(10))))
+            val ended = transfers.state.value
+            transfers.hold(true)
+            assertEquals(ended, transfers.state.value)
+        }
+
+    @Test
+    fun `a screen in front is counted, and a screen gone more times than it came never counts below none`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val transfers = transfers()
+            assertFalse(transfers.isWatched)
+            transfers.screenStarted()
+            transfers.screenStarted()
+            transfers.screenStopped()
+            assertTrue(transfers.isWatched)
+            transfers.screenStopped()
+            transfers.screenStopped()
+            assertFalse(transfers.isWatched)
+            transfers.screenStarted()
+            assertTrue(transfers.isWatched)
+        }
 
     // ---- In ------------------------------------------------------------------------------------
 

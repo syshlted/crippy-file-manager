@@ -1,7 +1,9 @@
 package com.systemhalted.encri.files
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.NotificationManager
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
@@ -10,10 +12,14 @@ import android.view.WindowManager
 import com.systemhalted.encri.client.Right
 import com.systemhalted.encri.client.VaultEvent
 import com.systemhalted.encri.files.link.Opening
+import com.systemhalted.encri.files.transfer.Report
+import com.systemhalted.encri.files.transfer.SystemTransferNotice
+import com.systemhalted.encri.files.transfer.TransferService
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -212,6 +218,90 @@ class CopyScreenTest {
         settle()
         assertTrue(outside.written.isEmpty())
         assertEquals(View.GONE, activity.transferBar().visibility)
+    }
+
+    @Test
+    fun `a copy in runs behind the service, which is handed the grant to read the files`() {
+        val activity = start(Opening.Open(session)).get()
+        val one = outside.add("a.txt", byteArrayOf(1))
+        val two = outside.add("b.txt", byteArrayOf(2))
+        activity.copyIn(one, two)
+        val started = shadowOf(activity.application).nextStartedService
+        assertEquals(TransferService::class.java.name, started.component!!.className)
+        assertEquals(
+            listOf(one, two),
+            (0 until started.clipData!!.itemCount).map { started.clipData!!.getItemAt(it).uri },
+        )
+        assertTrue(started.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+        assertEquals(0, started.flags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+    }
+
+    @Test
+    fun `a copy out runs behind the service, which is handed the grant to write the place chosen`() {
+        val activity = start(Opening.Open(session)).get()
+        activity.hold(1)
+        dialog().choose("Copy out of the vault")
+        dialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+        settle()
+        val asked = shadowOf(activity).nextStartedActivityForResult
+        val place = Uri.parse("content://elsewhere/chosen")
+        shadowOf(activity).receiveResult(asked.intent, Activity.RESULT_OK, Intent().setData(place))
+        settle()
+        val started = shadowOf(activity.application).nextStartedService
+        assertEquals(place, started.clipData!!.getItemAt(0).uri)
+        assertTrue(started.flags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION != 0)
+    }
+
+    @Test
+    fun `while the service holds a copy, the bar says it carries on when the user leaves`() {
+        session.writeGate = CompletableDeferred()
+        val activity = start(Opening.Open(session)).get()
+        activity.copyIn(outside.add("a.txt", byteArrayOf(1)))
+        assertTrue(
+            activity.transferText().endsWith(
+                "You can leave Encri Files: the copy carries on until it is done, or until the vault locks.",
+            ),
+        )
+        session.writeGate!!.complete(Unit)
+        settle()
+    }
+
+    @Test
+    @Config(sdk = [36])
+    fun `from API 33 a copy asks to notify, once it has started, unless it may already`() {
+        val activity = start(Opening.Open(session)).get()
+        activity.copyIn(outside.add("a.txt", byteArrayOf(1)))
+        assertArrayEquals(
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            shadowOf(activity).lastRequestedPermission.requestedPermissions,
+        )
+        assertTrue("the copy did not wait for the answer", activity.transferText().startsWith("Copied 1 file"))
+        shadowOf(activity.application).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        val again = start(Opening.Open(session)).get()
+        again.copyIn(outside.add("b.txt", byteArrayOf(2)))
+        assertNull(shadowOf(again).lastRequestedPermission)
+    }
+
+    @Test
+    @Config(sdk = [27])
+    fun `below API 33 nothing is asked, because notifying needs no permission there`() {
+        val activity = start(Opening.Open(session)).get()
+        activity.copyIn(outside.add("a.txt", byteArrayOf(1)))
+        assertNull(shadowOf(activity).lastRequestedPermission)
+    }
+
+    @Test
+    fun `the screen in front is what the service asks before saying how a copy ended, and takes the saying back`() {
+        val app = RuntimeEnvironment.getApplication() as TestApplication
+        shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        val manager = app.getSystemService(NotificationManager::class.java)
+        SystemTransferNotice(app).answered(Report.In(1, emptyList(), 0))
+        assertNotNull(shadowOf(manager).getNotification(SystemTransferNotice.ANSWER_ID))
+        val controller = start(Opening.Open(session))
+        assertTrue(app.transfers.isWatched)
+        assertNull(shadowOf(manager).getNotification(SystemTransferNotice.ANSWER_ID))
+        controller.pause().stop()
+        assertFalse(app.transfers.isWatched)
     }
 
     @Test

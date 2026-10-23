@@ -5,6 +5,17 @@ than restating it.
 
 ## Unreleased
 
+### A copy that carries on — 2026-10-23
+
+**Completed (F8).** A copy into or out of the vault runs behind a foreground service and a notification, so it carries
+on when the user goes to another app or swipes Encri Files away. The notification counts files and bytes, offers
+*Stop*, and says how the copy ended when no screen of the app is in front; it never names a file. The app now declares
+its first permissions: two for the service, and one, asked for when a copy starts, to post the notification. Checked on
+the A20 against encri with a 2 GB file each way, the app's task removed mid-copy, and *Stop* pressed in the
+notification.
+
+**Known issues.** The notification question at API 33+, and the service at API 34+, have not run on a phone.
+
 ### Sharing out — 2026-10-23
 
 **Completed (F7).** *Share* on a document's long press says what a share costs, then hands the document to the share
@@ -24,8 +35,8 @@ got, with Stop, and how it ended. Checked on the A20 against encri, a 400 MB fil
 **Bug found and fixed before it shipped.** A file copied in lost its date, because encri's rename stamps the time and
 the date was set before the rename. It is set after.
 
-**Known issues.** A copy runs in the app's process, so Android may pause or stop it while another app is in front
-(`ROADMAP.md`, *Later*).
+**Known issues.** ~~A copy runs in the app's process, so Android may pause or stop it while another app is in front
+(`ROADMAP.md`, *Later*).~~ Fixed by F8.
 
 ### Folders, renames, moves and deletes — 2026-10-23
 

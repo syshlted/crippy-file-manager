@@ -100,6 +100,8 @@ sealed interface Transfer {
         val bytesDone: Long,
         /** Null when an app a file came from did not say how long it is. */
         val bytesTotal: Long?,
+        /** True once a foreground service holds the copy, so it carries on when the user leaves the app (F8). */
+        val held: Boolean = false,
     ) : Transfer
 
     data class Finished(
@@ -135,6 +137,8 @@ class Transfers(
     val state: StateFlow<Transfer?> = mutableState.asStateFlow()
 
     private val stopping = AtomicBoolean(false)
+    private var held = false
+    private var screens = 0
 
     /** The folder a copy in goes into, while the user chooses files in the system's picker. */
     var pendingFolderId: String? = null
@@ -143,6 +147,28 @@ class Transfers(
     var pendingDocument: EncriDocument? = null
 
     val isRunning: Boolean get() = state.value is Transfer.Running
+
+    /** True while a screen of this app is in front, where the copy bar already says how a copy ended (F8). */
+    val isWatched: Boolean get() = screens > 0
+
+    /** A screen came to the front. */
+    fun screenStarted() {
+        screens++
+    }
+
+    /** A screen went from the front. */
+    fun screenStopped() {
+        screens = (screens - 1).coerceAtLeast(0)
+    }
+
+    /**
+     * Whether a foreground service holds the copy running (F8), which the bar says: held, it carries on when the
+     * user leaves; not held, it may not.
+     */
+    fun hold(held: Boolean) {
+        this.held = held
+        (state.value as? Transfer.Running)?.let { mutableState.value = it.copy(held = held) }
+    }
 
     /** Copies the files at [uris] into [folderId]; false, and nothing done, while another copy runs. */
     fun copyIn(
@@ -176,6 +202,7 @@ class Transfers(
     ): Boolean {
         if (isRunning) return false
         stopping.set(false)
+        held = false
         mutableState.value = first
         scope.launch { mutableState.value = Transfer.Finished(run()) }
         return true
@@ -527,7 +554,7 @@ class Transfers(
 
         fun show() {
             told = bytes
-            mutableState.value = Transfer.Running(direction, done, total, bytes, bytesTotal)
+            mutableState.value = Transfer.Running(direction, done, total, bytes, bytesTotal, held)
         }
     }
 

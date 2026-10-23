@@ -43,31 +43,14 @@ object TransferWords {
         context: Context,
         running: Transfer.Running,
     ): String {
-        val doing =
-            when (running.direction) {
-                Direction.IN -> {
-                    context.getString(
-                        R.string.copying_in,
-                        (running.done + 1).coerceAtMost(running.total),
-                        running.total,
-                    )
-                }
-
-                Direction.OUT -> {
-                    context.getString(R.string.copying_out)
-                }
-            }
-        val done = size(context, running.bytesDone)
-        val amount =
-            running.bytesTotal?.takeIf { it > 0 }?.let {
-                context.getString(
-                    R.string.copied_bytes,
-                    done,
-                    size(context, it),
-                )
-            }
-                ?: context.getString(R.string.copied_bytes_so_far, done).takeIf { running.bytesDone > 0 }
-        return listOfNotNull(doing, amount, context.getString(R.string.copying_keep_open)).joinToString("\n")
+        // Held by the service, a copy carries on when the user leaves; one the platform would not let the service
+        // hold may be paused or stopped, which the user has to know to stay (F8).
+        val stay = if (running.held) R.string.copying_carries_on else R.string.copying_keep_open
+        return listOfNotNull(
+            ProgressWords.doing(context, running),
+            ProgressWords.amountOf(context, running),
+            context.getString(stay),
+        ).joinToString("\n")
     }
 
     private fun finished(

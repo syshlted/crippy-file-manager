@@ -2,9 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-      No permissions of its own. The file manager reaches the vault through encri's companion service
-      (encri D112, D120), which needs none, and the client library merges the one `<queries>` entry
-      that lets this app see encri from API 30 (encri-api L12).
+      The vault needs no permission: the file manager reaches it through encri's companion service
+      (encri D112, D120), and the client library merges the one `<queries>` entry that lets this app
+      see encri from API 30 (encri-api L12).
+
+      Three for one capability, a copy that carries on while another app is in front (F8).
+      FOREGROUND_SERVICE is API 28 and FOREGROUND_SERVICE_DATA_SYNC API 34, and an app targeting 36
+      needs both: the second is a declaration of its own, not a successor (encri D78 read the same
+      out of `api-versions.xml`). Both are install-time and `normal`, nothing to ask for. The third,
+      POST_NOTIFICATIONS, is a runtime permission from API 33, asked for when a copy starts; refused,
+      the copy still carries on and only its notification is not drawn.
 
       allowBackup is false for encri's reason (encri D8): nothing this app keeps should leave the
       phone through a backup transport the user never chose. Today it keeps nothing.
@@ -12,6 +19,10 @@
       enableOnBackInvokedCallback, so back reaches FilesActivity's callback from API 33 on every ROM,
       rather than only where API 36 turns it on for an app that targets it. Ignored below 33.
     -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".FilesApplication"
         android:allowBackup="false"
@@ -32,5 +43,14 @@
         <activity
             android:name=".SettingsActivity"
             android:exported="false" />
+
+        <!--
+          The service a copy runs behind (F8). Not exported, binds to nothing: it holds the process in the
+          foreground and the picker's grants for the copy, which the application runs.
+        -->
+        <service
+            android:name=".transfer.TransferService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 </manifest>

@@ -1,9 +1,11 @@
 package com.systemhalted.encri.files
 
+import android.Manifest
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,7 +20,10 @@ import com.systemhalted.encri.client.Right
 import com.systemhalted.encri.files.link.Asked
 import com.systemhalted.encri.files.settings.Settings
 import com.systemhalted.encri.files.settings.followScreenshotSetting
+import com.systemhalted.encri.files.transfer.Direction
+import com.systemhalted.encri.files.transfer.SystemTransferNotice
 import com.systemhalted.encri.files.transfer.Transfer
+import com.systemhalted.encri.files.transfer.TransferService
 import com.systemhalted.encri.files.ui.Edits
 import com.systemhalted.encri.files.ui.FilesViews
 import com.systemhalted.encri.files.ui.Handoffs
@@ -40,12 +45,16 @@ import kotlinx.coroutines.launch
  * (encri D8): this screen shows the names of what is in the vault, and a screenshot or the recents
  * thumbnail would keep them outside it.
  *
- * **While a copy runs, back at the top sends the app to the background rather than closing it** (F6). A file
- * the system's picker handed over may be read for as long as this app's task is alive, so a copy in that is
- * still reading would lose the rest of its files if the task closed. From API 31 that is what back at the top
- * does anyway; below it, this is what keeps it so.
+ * **A copy runs behind a foreground service** ([TransferService], F8), which holds the picker's grants and keeps
+ * the process going while another app is in front. Notifications are asked for when a copy starts, the moment a
+ * user has something to be told about.
+ *
+ * **While a copy runs, back at the top sends the app to the background rather than closing it** (F6). The service
+ * holds the picker's grants whatever becomes of this screen, but the platform may refuse the service, and then a
+ * file the picker handed over is readable only while this app's task is alive. From API 31 back at the top does
+ * that anyway; below it, this is what keeps it so.
  */
-@Suppress("TooManyFunctions") // Eight are the platform's lifecycle, menu, result and back callbacks.
+@Suppress("TooManyFunctions") // Nine are the platform's lifecycle, menu, result and back callbacks.
 class FilesActivity :
     Activity(),
     FilesViews.Actions {
@@ -90,8 +99,16 @@ class FilesActivity :
      */
     override fun onStart() {
         super.onStart()
+        vaults.transfers.screenStarted()
+        // The bar says how a copy ended, so the notification that said it away from the screen is taken back (F8).
+        SystemTransferNotice.withdrawAnswer(this)
         vaults.link.open()
         vaults.browser.reload()
+    }
+
+    override fun onStop() {
+        vaults.transfers.screenStopped()
+        super.onStop()
     }
 
     /** The settings may have changed while [SettingsActivity] was in front. */
@@ -270,8 +287,8 @@ class FilesActivity :
         // The process that asked is gone, and with it where the files were to go: they are not guessed at.
         if (folderId == null) {
             Toast.makeText(this, R.string.choose_again, Toast.LENGTH_LONG).show()
-        } else {
-            vaults.transfers.copyIn(folderId, uris)
+        } else if (vaults.transfers.copyIn(folderId, uris)) {
+            holdTheCopy(uris, Direction.IN)
         }
     }
 
@@ -281,8 +298,23 @@ class FilesActivity :
         if (destination == null) return
         if (document == null) {
             Toast.makeText(this, R.string.choose_again, Toast.LENGTH_LONG).show()
-        } else {
-            vaults.transfers.copyOut(document, destination)
+        } else if (vaults.transfers.copyOut(document, destination)) {
+            holdTheCopy(listOf(destination), Direction.OUT)
+        }
+    }
+
+    /** Puts the copy that just started behind the service (F8), and asks to be allowed to say how it goes. */
+    private fun holdTheCopy(
+        uris: List<Uri>,
+        direction: Direction,
+    ) {
+        vaults.transfers.hold(TransferService.start(this, uris, direction))
+        // Refused, the copy still carries on; only its notification is not drawn. Asked every copy until answered,
+        // which Android itself stops showing after a second refusal.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
         }
     }
 
@@ -355,6 +387,7 @@ class FilesActivity :
     internal companion object {
         private const val REQUEST_AUTHORIZE = 1
         private const val REQUEST_UNLOCK = 2
+        private const val REQUEST_NOTIFICATIONS = 5
         const val REQUEST_COPY_IN = 3
         const val REQUEST_COPY_OUT = 4
         const val MENU_RELOAD = 1
