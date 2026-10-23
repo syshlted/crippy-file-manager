@@ -23,12 +23,41 @@ class FilesViews(
         fun onRemedy(remedy: Remedy)
 
         fun onDocument(document: EncriDocument)
+
+        /** A long press: the changes a document offers (F5). */
+        fun onDocumentHeld(document: EncriDocument)
+
+        fun onMoveHere()
+
+        fun onMoveCancelled()
     }
 
     private val message = TextView(activity)
     private val remedyButton = Button(activity)
     private val adapter = DocumentAdapter(activity, previews)
     private val list = ListView(activity)
+    private val movingText = TextView(activity)
+    private val moveHere = Button(activity).apply { setText(R.string.move_here) }
+
+    /** Shown at the foot of the screen while a document is being moved (F5). */
+    private val movingBar =
+        LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            val buttons =
+                LinearLayout(activity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    val cancel =
+                        Button(activity).apply {
+                            setText(android.R.string.cancel)
+                            setOnClickListener { actions.onMoveCancelled() }
+                        }
+                    moveHere.setOnClickListener { actions.onMoveHere() }
+                    addView(cancel, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                    addView(moveHere, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                }
+            addView(movingText)
+            addView(buttons)
+        }
 
     /** The remedy [remedyButton] offers, so a tap reports the one that was drawn. */
     private var remedy: Remedy? = null
@@ -43,9 +72,14 @@ class FilesViews(
             list.adapter = adapter
             list.setRecyclerListener(adapter::recycled)
             list.setOnItemClickListener { _, _, position, _ -> actions.onDocument(adapter.getItem(position)) }
+            list.setOnItemLongClickListener { _, _, position, _ ->
+                actions.onDocumentHeld(adapter.getItem(position))
+                true
+            }
             addView(message)
             addView(remedyButton)
             addView(list, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
+            addView(movingBar)
         }
 
     @Suppress("SpreadOperator") // A message has one argument at most; the copy costs nothing.
@@ -56,6 +90,9 @@ class FilesViews(
         remedyButton.visibility = if (screen.remedy == null) View.GONE else View.VISIBLE
         screen.remedy?.let { remedyButton.setText(labelOf(it)) }
         adapter.show(screen.documents)
+        movingBar.visibility = if (screen.moving == null) View.GONE else View.VISIBLE
+        screen.moving?.let { movingText.text = activity.getString(R.string.moving, it) }
+        moveHere.isEnabled = screen.canMoveHere
     }
 
     /** Draws every row again: whether previews are shown changed. */

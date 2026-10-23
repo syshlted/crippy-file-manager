@@ -3,6 +3,7 @@ package com.systemhalted.encri.files.link
 import android.net.Uri
 import com.systemhalted.encri.client.EncriDocument
 import com.systemhalted.encri.client.EncriResult
+import com.systemhalted.encri.client.Right
 import com.systemhalted.encri.client.VaultEvent
 import kotlinx.coroutines.flow.Flow
 
@@ -15,6 +16,9 @@ import kotlinx.coroutines.flow.Flow
 interface VaultSession : AutoCloseable {
     /** The folder the user let this app into, which is where browsing starts and above which it cannot go. */
     val root: EncriDocument
+
+    /** What the user let this app do, which lasts as long as the session (encri D120). */
+    val rights: Set<Right>
 
     /** Locks, unlocks, folders that changed, and the session ending. */
     val events: Flow<VaultEvent>
@@ -34,6 +38,27 @@ interface VaultSession : AutoCloseable {
 
     /** A `content://` URI that lets one other app read [documentId] (encri D117). */
     suspend fun handOff(documentId: String): EncriResult<Uri>
+
+    /** A new folder named [name] in [parentId]. A name already there is refused, never changed. */
+    suspend fun createFolder(
+        parentId: String,
+        name: String,
+    ): EncriResult<EncriDocument>
+
+    /** [documentId] renamed to [name]. A name already there is refused, never changed. */
+    suspend fun rename(
+        documentId: String,
+        name: String,
+    ): EncriResult<EncriDocument>
+
+    /** [documentId] moved into [parentId]. A name already there is refused, never changed. */
+    suspend fun move(
+        documentId: String,
+        parentId: String,
+    ): EncriResult<EncriDocument>
+
+    /** [documentId] deleted, a folder with everything in it. */
+    suspend fun delete(documentId: String): EncriResult<Unit>
 
     /** Locks the vault, for every app and for encri. */
     suspend fun lock(): EncriResult<Unit>

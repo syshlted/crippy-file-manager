@@ -51,6 +51,11 @@ class Browser(
     private val mutableListing = MutableStateFlow<Listing>(Listing.Waiting)
     val listing: StateFlow<Listing> = mutableListing.asStateFlow()
 
+    private val mutableMoving = MutableStateFlow<EncriDocument?>(null)
+
+    /** A document the user is moving: they go to the folder it goes into, and move it there (F5). */
+    val moving: StateFlow<EncriDocument?> = mutableMoving.asStateFlow()
+
     private var session: VaultSession? = null
     private var locked = false
     private var loading: Job? = null
@@ -74,6 +79,16 @@ class Browser(
         mutablePath.value = current.dropLast(1)
         reload()
         return true
+    }
+
+    /** Starts moving [document]: the user goes where it should go, and [moving] remembers it until then. */
+    fun startMove(document: EncriDocument) {
+        mutableMoving.value = document
+    }
+
+    /** Stops moving, whether the move was made or given up. */
+    fun endMove() {
+        mutableMoving.value = null
     }
 
     /** Lists the folder being looked at again. */
@@ -111,6 +126,7 @@ class Browser(
         // did; one rooted elsewhere — the user changed what this app may see — starts at its root.
         if (fresh && mutablePath.value.firstOrNull()?.id != open.session.root.id) {
             mutablePath.value = listOf(open.session.root)
+            mutableMoving.value = null
         }
         if (fresh || unlocked || open.locked) reload()
     }

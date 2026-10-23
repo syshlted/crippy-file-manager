@@ -2,8 +2,10 @@ package com.systemhalted.encri.files.ui
 
 import com.systemhalted.encri.client.EncriDocument
 import com.systemhalted.encri.client.Failure
+import com.systemhalted.encri.client.Right
 import com.systemhalted.encri.files.R
 import com.systemhalted.encri.files.browse.Listing
+import com.systemhalted.encri.files.link.Asked
 import com.systemhalted.encri.files.link.LinkState
 import com.systemhalted.encri.files.link.Opening
 
@@ -35,12 +37,21 @@ data class Screen(
     val canGoUp: Boolean = false,
     val canLock: Boolean = false,
     val canReload: Boolean = false,
+    /** What the session allows, and so which actions are offered. Empty with no session or a locked vault. */
+    val rights: Set<Right> = emptySet(),
+    /** Whether the session lacks a right this app asks for, so the menu offers to ask encri again (F5). */
+    val wantsMoreRights: Boolean = false,
+    /** The name of a document being moved, while the user goes to the folder it goes into (F5). */
+    val moving: String? = null,
+    /** Whether the folder being looked at can take the document being moved. */
+    val canMoveHere: Boolean = false,
 ) {
     companion object {
         fun of(
             state: LinkState,
             path: List<EncriDocument>,
             listing: Listing,
+            moving: EncriDocument? = null,
         ): Screen =
             when (state) {
                 LinkState.Idle, LinkState.Connecting -> {
@@ -52,7 +63,16 @@ data class Screen(
                 }
 
                 is LinkState.Open -> {
-                    if (state.locked) Screen(R.string.locked, remedy = Remedy.UNLOCK) else open(path, listing)
+                    if (state.locked) {
+                        Screen(R.string.locked, remedy = Remedy.UNLOCK)
+                    } else {
+                        open(path, listing).copy(
+                            rights = state.session.rights,
+                            wantsMoreRights = !state.session.rights.containsAll(Asked.RIGHTS),
+                            moving = moving?.name,
+                            canMoveHere = moving != null && canTake(path, moving),
+                        )
+                    }
                 }
             }
 
@@ -106,6 +126,15 @@ data class Screen(
                 }
             }
         }
+
+        /**
+         * Whether the folder at the end of [path] can take [moving]: not where it already is, and not inside
+         * itself. encri refuses both anyway (encri D15's cycle check); this keeps the button from offering them.
+         */
+        private fun canTake(
+            path: List<EncriDocument>,
+            moving: EncriDocument,
+        ): Boolean = path.lastOrNull()?.id != moving.parentId && path.none { it.id == moving.id }
 
         private fun failureMessage(failure: Failure): Int =
             when (failure) {

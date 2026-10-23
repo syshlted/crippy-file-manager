@@ -9,6 +9,8 @@ import com.systemhalted.encri.client.EncriDocument
 import com.systemhalted.encri.client.EncriResult
 import com.systemhalted.encri.client.EncriSession
 import com.systemhalted.encri.client.Failure
+import com.systemhalted.encri.client.NameConflict
+import com.systemhalted.encri.client.Right
 import com.systemhalted.encri.client.SessionOutcome
 import com.systemhalted.encri.client.VaultEvent
 import kotlinx.coroutines.flow.Flow
@@ -60,6 +62,8 @@ private class ClientSession(
 ) : VaultSession {
     override val root: EncriDocument get() = session.grant.scope
 
+    override val rights: Set<Right> get() = session.grant.rights
+
     override val events: Flow<VaultEvent> get() = session.events
 
     override suspend fun list(folderId: String): EncriResult<List<EncriDocument>> = session.list(folderId)
@@ -79,6 +83,23 @@ private class ClientSession(
             else -> EncriResult.Failed(Failure.FAILED, "encri handed back a URI count other than one")
         }
     }
+
+    override suspend fun createFolder(
+        parentId: String,
+        name: String,
+    ): EncriResult<EncriDocument> = session.createFolder(parentId, name, NameConflict.REFUSE)
+
+    override suspend fun rename(
+        documentId: String,
+        name: String,
+    ): EncriResult<EncriDocument> = session.rename(documentId, name, NameConflict.REFUSE)
+
+    override suspend fun move(
+        documentId: String,
+        parentId: String,
+    ): EncriResult<EncriDocument> = session.move(documentId, parentId, NameConflict.REFUSE)
+
+    override suspend fun delete(documentId: String): EncriResult<Unit> = session.delete(documentId)
 
     override suspend fun lock(): EncriResult<Unit> = session.lock()
 

@@ -1,11 +1,13 @@
 package com.systemhalted.encri.files.ui
 
 import com.systemhalted.encri.client.Failure
+import com.systemhalted.encri.client.Right
 import com.systemhalted.encri.files.FakeSession
 import com.systemhalted.encri.files.R
 import com.systemhalted.encri.files.browse.Listing
 import com.systemhalted.encri.files.document
 import com.systemhalted.encri.files.folder
+import com.systemhalted.encri.files.link.Asked
 import com.systemhalted.encri.files.link.LinkState
 import com.systemhalted.encri.files.link.Opening
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -83,6 +85,40 @@ class ScreenTest {
         assertEquals(R.string.loading, Screen.of(open, listOf(root), Listing.Loading).message)
         assertEquals(R.string.loading, Screen.of(open, listOf(root), Listing.Waiting).message)
         assertEquals(R.string.empty_folder, Screen.of(open, listOf(root), Listing.Listed(emptyList())).message)
+    }
+
+    @Test
+    fun `an open vault offers what the session allows, and asks for more when it lacks a right`() {
+        val all = Screen.of(open, listOf(root), Listing.Listed(emptyList()))
+        assertEquals(Asked.RIGHTS, all.rights)
+        assertFalse(all.wantsMoreRights)
+        val readOnly = FakeSession(root, emptyMap(), setOf(Right.READ))
+        val narrow = Screen.of(LinkState.Open(readOnly, locked = false), listOf(root), Listing.Listed(emptyList()))
+        assertEquals(setOf(Right.READ), narrow.rights)
+        assertTrue(narrow.wantsMoreRights)
+    }
+
+    @Test
+    fun `a locked vault offers no change`() {
+        val screen = Screen.of(LinkState.Open(session, locked = true), listOf(root), Listing.Waiting)
+        assertTrue(screen.rights.isEmpty())
+        assertFalse(screen.wantsMoreRights)
+    }
+
+    @Test
+    fun `a document can be moved anywhere but where it is`() {
+        val moving = document("beach", "beach.jpg", "photos")
+        val atHome = Screen.of(open, listOf(root, photos), Listing.Listed(emptyList()), moving)
+        assertEquals("beach.jpg", atHome.moving)
+        assertFalse(atHome.canMoveHere)
+        assertTrue(Screen.of(open, listOf(root), Listing.Listed(emptyList()), moving).canMoveHere)
+    }
+
+    @Test
+    fun `a folder cannot be moved into itself or anything inside it`() {
+        val inner = folder("inner", "Inner", "photos")
+        assertFalse(Screen.of(open, listOf(root, photos), Listing.Waiting, photos).canMoveHere)
+        assertFalse(Screen.of(open, listOf(root, photos, inner), Listing.Waiting, photos).canMoveHere)
     }
 
     @Test

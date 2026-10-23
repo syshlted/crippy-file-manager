@@ -40,6 +40,35 @@
     <string name="setting_screenshots">Allow screenshots</string>
     <string name="setting_screenshots_explain">When this is off, Android blocks screenshots and screen recordings of Encri Files, keeps it off any screen you cast to, and shows a blank card for it among your recent apps. When it is on, anything this app shows, such as the names and previews of what is in your vault, can be captured, and a screenshot is kept in your photos, outside the vault, where photo backups and other apps can reach it. This changes Encri Files alone: encri\'s own screens always block screenshots.</string>
 
+    <string name="menu_more_rights">Allow more in encri</string>
+    <string name="new_folder">New folder</string>
+    <string name="rename">Rename</string>
+    <string name="action_create">Create</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_move">Move</string>
+    <string name="action_delete">Delete</string>
+    <string name="delete_title">Delete “%1$s”?</string>
+    <string name="delete_document_explain">This cannot be undone. A backup encri made before now may still hold a copy.</string>
+    <string name="delete_folder_explain">Everything in the folder is deleted with it. This cannot be undone. A backup encri made before now may still hold a copy.</string>
+    <string name="moving">Moving “%1$s”. Go to the folder it should go into, and move it there.</string>
+    <string name="move_here">Move here</string>
+    <string name="nothing_allowed">encri has not let this app change anything here. “Allow more in encri”, in the menu, asks it.</string>
+
+    <string name="failed_create">The folder was not made</string>
+    <string name="failed_rename">It was not renamed</string>
+    <string name="failed_move">It was not moved</string>
+    <string name="failed_delete">It was not deleted</string>
+    <string name="reason_name_taken">Something with that name is already there.</string>
+    <string name="reason_bad_name">That name cannot be used.</string>
+    <string name="reason_bad_move">A folder cannot go inside itself, and the folder this app was let into cannot be moved.</string>
+    <string name="reason_bad_delete">The folder this app was let into cannot be deleted from here.</string>
+    <string name="reason_not_allowed">encri has not let this app do that. “Allow more in encri”, in the menu, asks it.</string>
+    <string name="reason_gone">It is no longer in the vault.</string>
+    <string name="reason_no_space">The phone has run out of space.</string>
+    <string name="reason_access_off">Other apps are not allowed into the vault: that is turned off in encri.</string>
+    <string name="reason_ended">encri ended the session. Try again.</string>
+    <string name="reason_failed">encri could not do it.</string>
+
     <string name="not_let_in">Encri Files was not let in.</string>
     <string name="handoff_failed">encri would not hand this document to another app.</string>
     <string name="no_viewer">No app on this phone opens %1$s.</string>

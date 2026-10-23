@@ -5,6 +5,13 @@ than restating it.
 
 ## Unreleased
 
+### Folders, renames, moves and deletes — 2026-10-23
+
+**Completed (F5).** *New folder* in the menu, and *Rename*, *Move* and *Delete* from a long press, each one
+request to encri. The app asks for every right; a grant that holds fewer offers *Allow more in encri*. A taken name
+is refused rather than changed, a move is made by going to the folder, and a delete is confirmed by name. Every
+dialog follows the screenshot setting. Checked on the A20 against encri.
+
 ### Previews — 2026-10-23
 
 **Completed (F4).** A photo or a video gets a preview in its row, made and encoded by encri, held in memory alone

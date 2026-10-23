@@ -149,6 +149,30 @@ class BrowserTest {
         }
 
     @Test
+    fun `a move is remembered until it is made or given up`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val opened = opened()
+            opened.browser.startMove(notes)
+            opened.browser.enter(photos)
+            assertEquals(notes, opened.browser.moving.value)
+            opened.browser.endMove()
+            assertEquals(null, opened.browser.moving.value)
+        }
+
+    @Test
+    fun `a session rooted somewhere else forgets a move`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val first = FakeSession(root, tree)
+            val second = FakeSession(photos, tree)
+            val link = VaultLink(FakeOpener(Opening.Open(first), Opening.Open(second)), backgroundScope)
+            val browser = Browser(link, backgroundScope)
+            link.open()
+            browser.startMove(notes)
+            first.events.emit(VaultEvent.Ended)
+            assertEquals(null, browser.moving.value)
+        }
+
+    @Test
     fun `names sort as the language sorts them, not by character code`() {
         val upper = document("u", "Zebra.txt")
         val lower = document("l", "apple.txt")

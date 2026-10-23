@@ -14,8 +14,10 @@ import android.window.OnBackInvokedDispatcher
 import com.systemhalted.encri.client.Encri
 import com.systemhalted.encri.client.EncriDocument
 import com.systemhalted.encri.client.Right
+import com.systemhalted.encri.files.link.Asked
 import com.systemhalted.encri.files.settings.Settings
 import com.systemhalted.encri.files.settings.followScreenshotSetting
+import com.systemhalted.encri.files.ui.Edits
 import com.systemhalted.encri.files.ui.FilesViews
 import com.systemhalted.encri.files.ui.Remedy
 import com.systemhalted.encri.files.ui.Screen
@@ -44,6 +46,7 @@ class FilesActivity :
     private lateinit var views: FilesViews
     private lateinit var viewer: Viewer
     private lateinit var settings: Settings
+    private lateinit var edits: Edits
     private var screen = Screen(R.string.connecting)
 
     // A callback only from API 33, where predictive back replaced onBackPressed (see onBackPressed).
@@ -57,9 +60,16 @@ class FilesActivity :
         vaults.previews.enabled = settings.previewsShown
         views = FilesViews(this, this, vaults.previews)
         viewer = Viewer(this, vaults.link)
+        edits = Edits(this, vaults, settings, ui)
         setContentView(views.root)
         ui.launch {
-            combine(vaults.link.state, vaults.browser.path, vaults.browser.listing, Screen::of).collect(::render)
+            combine(
+                vaults.link.state,
+                vaults.browser.path,
+                vaults.browser.listing,
+                vaults.browser.moving,
+                Screen::of,
+            ).collect(::render)
         }
     }
 
@@ -99,6 +109,8 @@ class FilesActivity :
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menu.add(Menu.NONE, MENU_NEW_FOLDER, Menu.NONE, R.string.new_folder)
+        menu.add(Menu.NONE, MENU_MORE_RIGHTS, Menu.NONE, R.string.menu_more_rights)
         menu.add(Menu.NONE, MENU_RELOAD, Menu.NONE, R.string.menu_reload)
         menu.add(Menu.NONE, MENU_LOCK, Menu.NONE, R.string.menu_lock)
         menu.add(Menu.NONE, MENU_SETTINGS, Menu.NONE, R.string.settings)
@@ -106,6 +118,8 @@ class FilesActivity :
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        menu.findItem(MENU_NEW_FOLDER).isVisible = Right.CREATE in screen.rights && screen.moving == null
+        menu.findItem(MENU_MORE_RIGHTS).isVisible = screen.wantsMoreRights
         menu.findItem(MENU_RELOAD).isVisible = screen.canReload
         menu.findItem(MENU_LOCK).isVisible = screen.canLock
         return true
@@ -113,18 +127,42 @@ class FilesActivity :
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            android.R.id.home -> vaults.browser.up()
-            MENU_RELOAD -> vaults.browser.reload()
-            MENU_LOCK -> vaults.link.lock()
-            MENU_SETTINGS -> startActivity(Intent(this, SettingsActivity::class.java))
-            else -> return super.onOptionsItemSelected(item)
+            android.R.id.home -> {
+                vaults.browser.up()
+            }
+
+            MENU_NEW_FOLDER -> {
+                vaults.browser.path.value
+                    .lastOrNull()
+                    ?.let { edits.newFolder(it.id) }
+            }
+
+            MENU_MORE_RIGHTS -> {
+                ask(Encri.authorizationIntent(Asked.RIGHTS), REQUEST_AUTHORIZE)
+            }
+
+            MENU_RELOAD -> {
+                vaults.browser.reload()
+            }
+
+            MENU_LOCK -> {
+                vaults.link.lock()
+            }
+
+            MENU_SETTINGS -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+            }
+
+            else -> {
+                return super.onOptionsItemSelected(item)
+            }
         }
         return true
     }
 
     override fun onRemedy(remedy: Remedy) {
         when (remedy) {
-            Remedy.ASK -> ask(Encri.authorizationIntent(RIGHTS), REQUEST_AUTHORIZE)
+            Remedy.ASK -> ask(Encri.authorizationIntent(Asked.RIGHTS), REQUEST_AUTHORIZE)
             Remedy.UNLOCK -> ask(Encri.unlockIntent(), REQUEST_UNLOCK)
             Remedy.RETRY -> vaults.link.open()
         }
@@ -164,6 +202,16 @@ class FilesActivity :
         }
     }
 
+    override fun onDocumentHeld(document: EncriDocument) = edits.offer(document, screen.rights)
+
+    override fun onMoveHere() {
+        vaults.browser.path.value
+            .lastOrNull()
+            ?.let(edits::moveHere)
+    }
+
+    override fun onMoveCancelled() = vaults.browser.endMove()
+
     /**
      * Back goes up a folder before it leaves. From API 33 the platform asks for a callback instead, and
      * from API 36 for an app targeting it this method is never called; below 33 it is the only way.
@@ -198,15 +246,12 @@ class FilesActivity :
     }
 
     internal companion object {
-        /**
-         * Read alone, because it is all this version uses: asking for more would show the user rights nothing
-         * here exercises, and encri asks again at every update anyway (encri D120; F2).
-         */
-        private val RIGHTS = setOf(Right.READ)
         private const val REQUEST_AUTHORIZE = 1
         private const val REQUEST_UNLOCK = 2
         const val MENU_RELOAD = 1
         const val MENU_LOCK = 2
         const val MENU_SETTINGS = 3
+        const val MENU_NEW_FOLDER = 4
+        const val MENU_MORE_RIGHTS = 5
     }
 }

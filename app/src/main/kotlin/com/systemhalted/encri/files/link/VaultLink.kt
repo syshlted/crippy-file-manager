@@ -76,17 +76,19 @@ class VaultLink(
             }
     }
 
+    /** Whatever [request] answers, asked of the open session, or why there is no session to ask. */
+    suspend fun <T> ask(request: suspend (VaultSession) -> EncriResult<T>): EncriResult<T> =
+        openSession()?.let { request(it) } ?: EncriResult.Failed(Failure.ENDED, "no session")
+
     /** A preview of [documentId], or why there is none. */
     suspend fun thumbnail(
         documentId: String,
         width: Int,
         height: Int,
-    ): EncriResult<ByteArray> =
-        openSession()?.thumbnail(documentId, width, height) ?: EncriResult.Failed(Failure.ENDED, "no session")
+    ): EncriResult<ByteArray> = ask { it.thumbnail(documentId, width, height) }
 
     /** A URI another app may read [documentId] through, or why there is none. */
-    suspend fun handOff(documentId: String): EncriResult<Uri> =
-        openSession()?.handOff(documentId) ?: EncriResult.Failed(Failure.ENDED, "no session")
+    suspend fun handOff(documentId: String): EncriResult<Uri> = ask { it.handOff(documentId) }
 
     /** Locks the vault. The session hears the lock and says so. */
     fun lock() {

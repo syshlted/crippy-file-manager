@@ -13,8 +13,7 @@ The scaffold and the first screen are done (F1, F2): connect, ask, unlock, brows
 app. What follows is encri's step 13 for the file manager (encri D112 to D118, D123), in order.
 
 1. ~~**Previews**, with a toggle of this app's own, on by default (encri D112).~~ **Done 2026-10-23 (F4).**
-2. **Writing**: a new folder, rename, delete and move. Each needs a right this version does not ask for,
-   so the version that adds them asks the user again (F2).
+2. ~~**Writing**: a new folder, rename, delete and move.~~ **Done 2026-10-23 (F5)**, asking for every right.
 3. **Copying in and out.** In: a file chosen in the system picker, written into the vault through the
    session. Out: a document written to a place the user picks, with a sentence before it saying that the
    copy is plaintext in another app's storage (invariant 2 in encri; encri D123).

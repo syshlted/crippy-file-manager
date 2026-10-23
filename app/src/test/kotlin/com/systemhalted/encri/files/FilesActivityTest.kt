@@ -41,25 +41,6 @@ import org.robolectric.fakes.RoboMenuItem
 import org.robolectric.shadows.ShadowToast
 import kotlin.coroutines.EmptyCoroutineContext
 
-/** The application under test: the real link and browser over a stand-in for encri. */
-class TestApplication :
-    Application(),
-    Vaults {
-    override lateinit var link: VaultLink
-    override lateinit var browser: Browser
-    override lateinit var previews: Previews
-
-    fun use(opener: Opener) {
-        val scope = MainScope()
-        link = VaultLink(opener, scope)
-        browser = Browser(link, scope)
-        previews =
-            Previews(link, scope, decodeContext = EmptyCoroutineContext) {
-                Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
-            }
-    }
-}
-
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class, sdk = [27, 36])
 class FilesActivityTest {
@@ -69,34 +50,6 @@ class FilesActivityTest {
     private val beach = document("beach", "beach.jpg", "photos", "image/jpeg", thumbnailable = true)
     private val session = FakeSession(root, mapOf("root" to listOf(notes, photos), "photos" to listOf(beach)))
 
-    private fun start(vararg answers: Opening): ActivityController<FilesActivity> {
-        (RuntimeEnvironment.getApplication() as TestApplication).use(FakeOpener(*answers))
-        val controller = Robolectric.buildActivity(FilesActivity::class.java).setup()
-        settle()
-        return controller
-    }
-
-    private fun settle() = shadowOf(Looper.getMainLooper()).idle()
-
-    private fun Activity.body(): ViewGroup = findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup
-
-    private fun Activity.message(): TextView = body().getChildAt(0) as TextView
-
-    private fun Activity.remedy(): Button = body().getChildAt(1) as Button
-
-    private fun Activity.list(): ListView = body().getChildAt(2) as ListView
-
-    private fun Activity.rowNames(): List<String> =
-        (0 until list().adapter.count).map { position ->
-            val row = list().adapter.getView(position, null, list())
-            row.findViewById<TextView>(android.R.id.text1).text.toString()
-        }
-
-    private fun Activity.tap(position: Int) {
-        list().performItemClick(list().adapter.getView(position, null, list()), position, position.toLong())
-        settle()
-    }
-
     @Test
     fun `the vault is listed where the user was let in, folders first`() {
         val activity = start(Opening.Open(session)).get()
@@ -104,12 +57,6 @@ class FilesActivityTest {
         assertEquals(View.GONE, activity.message().visibility)
         assertEquals(View.GONE, activity.remedy().visibility)
         assertEquals("Encri Files", activity.title.toString())
-    }
-
-    private fun Activity.rowImage(position: Int): ImageView {
-        val row = list().adapter.getView(position, null, list()) as ViewGroup
-        settle()
-        return row.getChildAt(0) as ImageView
     }
 
     @Test
@@ -333,12 +280,6 @@ class FilesActivityTest {
         settle()
         assertEquals(listOf("root", "root"), session.listed)
     }
-
-    private fun Activity.menu(): RoboMenu =
-        RoboMenu(this).also {
-            onCreateOptionsMenu(it)
-            onPrepareOptionsMenu(it)
-        }
 
     @Test
     fun `an open vault's menu offers a lock and a refresh`() {
