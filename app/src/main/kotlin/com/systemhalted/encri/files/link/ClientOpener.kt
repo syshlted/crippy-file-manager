@@ -2,6 +2,7 @@ package com.systemhalted.encri.files.link
 
 import android.content.Context
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import com.systemhalted.encri.client.ConnectResult
 import com.systemhalted.encri.client.Encri
 import com.systemhalted.encri.client.EncriConnection
@@ -16,6 +17,8 @@ import com.systemhalted.encri.client.VaultEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * The [Opener] that asks the encri installed on this phone, through encri-client (encri D112).
@@ -57,6 +60,7 @@ class ClientOpener(
 }
 
 /** A real session, as the file manager uses it. */
+@Suppress("TooManyFunctions") // One per request in VaultSession.
 private class ClientSession(
     private val session: EncriSession,
 ) : VaultSession {
@@ -100,6 +104,35 @@ private class ClientSession(
     ): EncriResult<EncriDocument> = session.move(documentId, parentId, NameConflict.REFUSE)
 
     override suspend fun delete(documentId: String): EncriResult<Unit> = session.delete(documentId)
+
+    override suspend fun createFile(
+        parentId: String,
+        name: String,
+        mimeType: String,
+        onNameTaken: NameConflict,
+    ): EncriResult<EncriDocument> = session.createFile(parentId, name, mimeType, onNameTaken)
+
+    override suspend fun write(
+        documentId: String,
+        writer: suspend (OutputStream) -> Unit,
+    ): EncriResult<EncriDocument> = session.write(documentId, writer)
+
+    override suspend fun setModified(
+        documentId: String,
+        modifiedMillis: Long,
+    ): EncriResult<EncriDocument> = session.setTimes(documentId, modifiedMillis = modifiedMillis)
+
+    override suspend fun openRead(documentId: String): EncriResult<InputStream> =
+        when (val opened = session.openRead(documentId)) {
+            is EncriResult.Ok -> EncriResult.Ok(ParcelFileDescriptor.AutoCloseInputStream(opened.value))
+            is EncriResult.Failed -> opened
+        }
+
+    override suspend fun usableBytes(): EncriResult<Long> =
+        when (val space = session.space()) {
+            is EncriResult.Ok -> EncriResult.Ok(space.value.usableBytes)
+            is EncriResult.Failed -> space
+        }
 
     override suspend fun lock(): EncriResult<Unit> = session.lock()
 

@@ -14,6 +14,7 @@ import com.systemhalted.encri.files.browse.Previews
 import com.systemhalted.encri.files.link.Opener
 import com.systemhalted.encri.files.link.Opening
 import com.systemhalted.encri.files.link.VaultLink
+import com.systemhalted.encri.files.transfer.Transfers
 import kotlinx.coroutines.MainScope
 import org.robolectric.Robolectric
 import org.robolectric.RuntimeEnvironment
@@ -29,6 +30,10 @@ class TestApplication :
     override lateinit var link: VaultLink
     override lateinit var browser: Browser
     override lateinit var previews: Previews
+    override lateinit var transfers: Transfers
+
+    /** The phone's storage the copies reach, which a test fills before it copies. */
+    val outside = FakeOutside()
 
     fun use(opener: Opener) {
         val scope = MainScope()
@@ -38,6 +43,7 @@ class TestApplication :
             Previews(link, scope, decodeContext = EmptyCoroutineContext) {
                 Bitmap.createBitmap(2, 2, Bitmap.Config.ARGB_8888)
             }
+        transfers = Transfers(link, outside, scope, io = EmptyCoroutineContext, pauseMillis = 0)
     }
 }
 
@@ -59,6 +65,13 @@ fun Activity.message(): TextView = body().getChildAt(0) as TextView
 fun Activity.remedy(): Button = body().getChildAt(1) as Button
 
 fun Activity.list(): ListView = body().getChildAt(2) as ListView
+
+/** The bar shown while a copy runs or until its ending is read: its sentence, a progress bar, and one button. */
+fun Activity.transferBar(): ViewGroup = body().getChildAt(4) as ViewGroup
+
+fun Activity.transferText(): String = (transferBar().getChildAt(0) as TextView).text.toString()
+
+fun Activity.transferButton(): Button = transferBar().getChildAt(2) as Button
 
 /** The bar shown while a document is moved: its sentence, then a row of Cancel and Move here. */
 fun Activity.movingBar(): ViewGroup = body().getChildAt(3) as ViewGroup

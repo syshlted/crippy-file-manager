@@ -69,6 +69,57 @@
     <string name="reason_ended">encri ended the session. Try again.</string>
     <string name="reason_failed">encri could not do it.</string>
 
+    <!-- F6: copying files into the vault and out of it. -->
+    <string name="copy_in">Copy files in</string>
+    <string name="action_copy_out">Copy out of the vault</string>
+    <string name="copy_out_title">Copy “%1$s” out of the vault?</string>
+    <string name="copy_out_explain">The copy is not encrypted. It goes to a place you choose next, outside the vault, where the app that keeps that place can read it, and so can anything that app backs up or syncs to. Encri Files cannot take it back, and deleting the document from the vault later does not delete the copy.</string>
+    <string name="copy_out_choose">Choose where</string>
+    <string name="no_picker">No app on this phone can choose files.</string>
+    <string name="choose_again">Nothing was copied: Encri Files was closed while you chose. Choose again.</string>
+    <string name="copying_in">Copying %1$d of %2$d into the vault…</string>
+    <string name="copying_out">Copying out of the vault…</string>
+    <!-- How much of a copy is done: "12 MB of 40 MB". -->
+    <string name="copied_bytes">%1$s of %2$s</string>
+    <string name="copied_bytes_so_far">%1$s so far</string>
+    <string name="copying_keep_open">Keep Encri Files open until it finishes: Android may pause or stop it while another app is in front.</string>
+    <string name="transfer_stop">Stop</string>
+    <plurals name="copied_in">
+        <item quantity="one">Copied %d file into the vault.</item>
+        <item quantity="other">Copied %d files into the vault.</item>
+    </plurals>
+    <string name="copied_in_some">Copied %1$d of %2$d into the vault.</string>
+    <string name="copied_in_none">Nothing was copied into the vault.</string>
+    <string name="not_copied_unlock">Unlock the vault to see which were not copied, and why.</string>
+    <!-- A file not copied in, and why: "“notes.txt”: Something with that name is already there." -->
+    <string name="not_copied_line">“%1$s”: %2$s</string>
+    <string name="not_copied_unnamed">A file with no name: %1$s</string>
+    <plurals name="not_copied_count">
+        <item quantity="one">%d was not copied.</item>
+        <item quantity="other">%d were not copied.</item>
+    </plurals>
+    <plurals name="not_copied_more">
+        <item quantity="one">%d more was not copied.</item>
+        <item quantity="other">%d more were not copied.</item>
+    </plurals>
+    <plurals name="left_unfinished">
+        <item quantity="one">One is left in the vault with “(unfinished)” in its name: delete it, and copy that file again.</item>
+        <item quantity="other">%d are left in the vault with “(unfinished)” in their names: delete them, and copy those files again.</item>
+    </plurals>
+    <string name="originals_stay">The originals are still where they were, and not encrypted: copying a file in does not remove it. Delete them there if they should be in the vault alone.</string>
+    <string name="copy_in_no_room">Nothing was copied: the files need %1$s, and the vault can take %2$s more.</string>
+    <string name="copied_out_named">Copied “%1$s” out of the vault.</string>
+    <string name="copied_out">Copied out of the vault.</string>
+    <string name="copy_out_failed">It was not copied out. %1$s</string>
+    <string name="copy_out_left">The file made at the place you chose is left there, empty or part-written: delete it there.</string>
+    <string name="copy_out_short">The place you chose holds less than was written, so the copy there is not whole. Delete it there, and copy it out again.</string>
+    <string name="reason_no_name">The app it came from gives it no name.</string>
+    <string name="reason_unreadable">The app it came from would not hand it over.</string>
+    <string name="reason_vault_stopped">encri stopped handing it over, as it does when the vault locks or this app\'s access ends.</string>
+    <string name="reason_destination">The place you chose would not take it.</string>
+    <string name="reason_stopped">It was stopped.</string>
+    <string name="reason_folder_gone">The folder is no longer in the vault.</string>
+
     <string name="not_let_in">Encri Files was not let in.</string>
     <string name="handoff_failed">encri would not hand this document to another app.</string>
     <string name="no_viewer">No app on this phone opens %1$s.</string>

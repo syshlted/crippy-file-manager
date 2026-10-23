@@ -14,9 +14,8 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 
 1. ~~**Previews**, with a toggle of this app's own, on by default (encri D112).~~ **Done 2026-10-23 (F4).**
 2. ~~**Writing**: a new folder, rename, delete and move.~~ **Done 2026-10-23 (F5)**, asking for every right.
-3. **Copying in and out.** In: a file chosen in the system picker, written into the vault through the
-   session. Out: a document written to a place the user picks, with a sentence before it saying that the
-   copy is plaintext in another app's storage (invariant 2 in encri; encri D123).
+3. ~~**Copying in and out.**~~ **Done 2026-10-23 (F6).** Folders and several documents out at once are not
+   built; see F6.
 4. **Sharing out** through a handoff and the share sheet (encri D118), saying that the app it reaches may
    read it later, after the vault has locked, and find it gone.
 5. **encri's backup screens, by their public actions** (encri D123): *Back up*, *Save a backup file* and
@@ -24,6 +23,12 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 6. **Device tests against encri**, as encri-api's L13 runs them: install encri, let the test in, and drive
    this app's screen from another process. The first run was by hand on the A20 (F2).
 7. **The visible name.** "Encri Files" is for now (F1).
+
+## Later
+
+- **A copy that keeps going while another app is in front** (S3, F6's first flag): a `dataSync` foreground service,
+  which is this app's first permission. Until then a long copy may pause or stop when the user leaves.
+- **Copying a folder, or several documents out at once**, which F6 left out.
 
 ## Before the first release
 

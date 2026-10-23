@@ -4,6 +4,7 @@ import android.annotation.TargetApi
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
@@ -17,6 +18,7 @@ import com.systemhalted.encri.client.Right
 import com.systemhalted.encri.files.link.Asked
 import com.systemhalted.encri.files.settings.Settings
 import com.systemhalted.encri.files.settings.followScreenshotSetting
+import com.systemhalted.encri.files.transfer.Transfer
 import com.systemhalted.encri.files.ui.Edits
 import com.systemhalted.encri.files.ui.FilesViews
 import com.systemhalted.encri.files.ui.Remedy
@@ -36,6 +38,11 @@ import kotlinx.coroutines.launch
  * **Screenshots are blocked unless the user allows them in [SettingsActivity]** (F3), for encri's reason
  * (encri D8): this screen shows the names of what is in the vault, and a screenshot or the recents
  * thumbnail would keep them outside it.
+ *
+ * **While a copy runs, back at the top sends the app to the background rather than closing it** (F6). A file
+ * the system's picker handed over may be read for as long as this app's task is alive, so a copy in that is
+ * still reading would lose the rest of its files if the task closed. From API 31 that is what back at the top
+ * does anyway; below it, this is what keeps it so.
  */
 @Suppress("TooManyFunctions") // Eight are the platform's lifecycle, menu, result and back callbacks.
 class FilesActivity :
@@ -60,7 +67,7 @@ class FilesActivity :
         vaults.previews.enabled = settings.previewsShown
         views = FilesViews(this, this, vaults.previews)
         viewer = Viewer(this, vaults.link)
-        edits = Edits(this, vaults, settings, ui)
+        edits = Edits(this, vaults, settings, ui, ::chooseWhereToCopy)
         setContentView(views.root)
         ui.launch {
             combine(
@@ -68,6 +75,7 @@ class FilesActivity :
                 vaults.browser.path,
                 vaults.browser.listing,
                 vaults.browser.moving,
+                vaults.transfers.state,
                 Screen::of,
             ).collect(::render)
         }
@@ -100,16 +108,19 @@ class FilesActivity :
     }
 
     private fun render(screen: Screen) {
+        // A copy that ended changed the folder, and encri's notice of that is best effort (F2).
+        if (this.screen.transfer is Transfer.Running && screen.transfer is Transfer.Finished) vaults.browser.reload()
         this.screen = screen
         views.render(screen)
         title = screen.title ?: getString(R.string.app_name)
         actionBar?.setDisplayHomeAsUpEnabled(screen.canGoUp)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) followBack(screen.canGoUp)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) followBack(screen.canGoUp || !screen.canStartCopy)
         invalidateOptionsMenu()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menu.add(Menu.NONE, MENU_NEW_FOLDER, Menu.NONE, R.string.new_folder)
+        menu.add(Menu.NONE, MENU_COPY_IN, Menu.NONE, R.string.copy_in)
         menu.add(Menu.NONE, MENU_MORE_RIGHTS, Menu.NONE, R.string.menu_more_rights)
         menu.add(Menu.NONE, MENU_RELOAD, Menu.NONE, R.string.menu_reload)
         menu.add(Menu.NONE, MENU_LOCK, Menu.NONE, R.string.menu_lock)
@@ -119,6 +130,7 @@ class FilesActivity :
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         menu.findItem(MENU_NEW_FOLDER).isVisible = Right.CREATE in screen.rights && screen.moving == null
+        menu.findItem(MENU_COPY_IN).isVisible = screen.canCopyIn
         menu.findItem(MENU_MORE_RIGHTS).isVisible = screen.wantsMoreRights
         menu.findItem(MENU_RELOAD).isVisible = screen.canReload
         menu.findItem(MENU_LOCK).isVisible = screen.canLock
@@ -135,6 +147,10 @@ class FilesActivity :
                 vaults.browser.path.value
                     .lastOrNull()
                     ?.let { edits.newFolder(it.id) }
+            }
+
+            MENU_COPY_IN -> {
+                chooseFilesToCopy()
             }
 
             MENU_MORE_RIGHTS -> {
@@ -182,16 +198,90 @@ class FilesActivity :
         }
     }
 
+    /** Asks the system's picker for files to copy into the folder being looked at (F6). */
+    private fun chooseFilesToCopy() {
+        val folder =
+            vaults.browser.path.value
+                .lastOrNull() ?: return
+        vaults.transfers.pendingFolderId = folder.id
+        pick(
+            Intent(Intent.ACTION_OPEN_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType("*/*")
+                .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true),
+            REQUEST_COPY_IN,
+        )
+    }
+
+    /** Asks the system's picker where a copy of [document] goes (F6); the user has read what it costs. */
+    private fun chooseWhereToCopy(document: EncriDocument) {
+        vaults.transfers.pendingDocument = document
+        pick(
+            Intent(Intent.ACTION_CREATE_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setType(document.mimeType)
+                .putExtra(Intent.EXTRA_TITLE, document.name),
+            REQUEST_COPY_OUT,
+        )
+    }
+
+    @Suppress("SwallowedException") // A phone with no picker is an answer to give the user.
+    private fun pick(
+        intent: Intent,
+        request: Int,
+    ) {
+        try {
+            startActivityForResult(intent, request)
+        } catch (none: ActivityNotFoundException) {
+            Toast.makeText(this, R.string.no_picker, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     @Deprecated("A framework Activity's only way to hear a result; this app has no AndroidX.")
     override fun onActivityResult(
         requestCode: Int,
         resultCode: Int,
         data: Intent?,
     ) {
-        if (requestCode == REQUEST_AUTHORIZE && Encri.authorizationResult(resultCode, data) == null) {
-            Toast.makeText(this, R.string.not_let_in, Toast.LENGTH_SHORT).show()
+        when (requestCode) {
+            REQUEST_COPY_IN -> {
+                copyIn(if (resultCode == RESULT_OK) chosen(data) else emptyList())
+            }
+
+            REQUEST_COPY_OUT -> {
+                copyOut(data?.data.takeIf { resultCode == RESULT_OK })
+            }
+
+            else -> {
+                if (requestCode == REQUEST_AUTHORIZE && Encri.authorizationResult(resultCode, data) == null) {
+                    Toast.makeText(this, R.string.not_let_in, Toast.LENGTH_SHORT).show()
+                }
+                vaults.link.open()
+            }
         }
-        vaults.link.open()
+    }
+
+    private fun copyIn(uris: List<Uri>) {
+        val folderId = vaults.transfers.pendingFolderId
+        vaults.transfers.pendingFolderId = null
+        if (uris.isEmpty()) return
+        // The process that asked is gone, and with it where the files were to go: they are not guessed at.
+        if (folderId == null) {
+            Toast.makeText(this, R.string.choose_again, Toast.LENGTH_LONG).show()
+        } else {
+            vaults.transfers.copyIn(folderId, uris)
+        }
+    }
+
+    private fun copyOut(destination: Uri?) {
+        val document = vaults.transfers.pendingDocument
+        vaults.transfers.pendingDocument = null
+        if (destination == null) return
+        if (document == null) {
+            Toast.makeText(this, R.string.choose_again, Toast.LENGTH_LONG).show()
+        } else {
+            vaults.transfers.copyOut(document, destination)
+        }
     }
 
     override fun onDocument(document: EncriDocument) {
@@ -202,7 +292,7 @@ class FilesActivity :
         }
     }
 
-    override fun onDocumentHeld(document: EncriDocument) = edits.offer(document, screen.rights)
+    override fun onDocumentHeld(document: EncriDocument) = edits.offer(document, screen.rights, screen.canStartCopy)
 
     override fun onMoveHere() {
         vaults.browser.path.value
@@ -212,25 +302,40 @@ class FilesActivity :
 
     override fun onMoveCancelled() = vaults.browser.endMove()
 
+    override fun onTransferButton() {
+        if (vaults.transfers.isRunning) vaults.transfers.stop() else vaults.transfers.dismiss()
+    }
+
+    /** Up a folder; at the top, while a copy runs, to the background rather than closed (see the class). */
+    private fun back(): Boolean =
+        when {
+            vaults.browser.up() -> true
+            vaults.transfers.isRunning -> moveTaskToBack(true).let { true }
+            else -> false
+        }
+
     /**
      * Back goes up a folder before it leaves. From API 33 the platform asks for a callback instead, and
      * from API 36 for an app targeting it this method is never called; below 33 it is the only way.
      */
     @Deprecated("The way back below API 33; followBack is the way from 33.")
     override fun onBackPressed() {
-        if (!vaults.browser.up()) {
+        if (!back()) {
             @Suppress("DEPRECATION")
             super.onBackPressed()
         }
     }
 
-    /** Registers [upOnBack] while there is a folder to go up to, so back at the top leaves as usual. */
+    /**
+     * Registers [upOnBack] while there is a folder to go up to or a copy running, so back at the top leaves as
+     * usual otherwise.
+     */
     @TargetApi(Build.VERSION_CODES.TIRAMISU)
-    private fun followBack(canGoUp: Boolean) {
+    private fun followBack(handlesBack: Boolean) {
         val held = upOnBack as OnBackInvokedCallback?
         when {
-            canGoUp && held == null -> {
-                val callback = OnBackInvokedCallback { vaults.browser.up() }
+            handlesBack && held == null -> {
+                val callback = OnBackInvokedCallback { back() }
                 onBackInvokedDispatcher.registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                     callback,
@@ -238,7 +343,7 @@ class FilesActivity :
                 upOnBack = callback
             }
 
-            !canGoUp && held != null -> {
+            !handlesBack && held != null -> {
                 onBackInvokedDispatcher.unregisterOnBackInvokedCallback(held)
                 upOnBack = null
             }
@@ -248,10 +353,23 @@ class FilesActivity :
     internal companion object {
         private const val REQUEST_AUTHORIZE = 1
         private const val REQUEST_UNLOCK = 2
+        const val REQUEST_COPY_IN = 3
+        const val REQUEST_COPY_OUT = 4
         const val MENU_RELOAD = 1
         const val MENU_LOCK = 2
         const val MENU_SETTINGS = 3
         const val MENU_NEW_FOLDER = 4
         const val MENU_MORE_RIGHTS = 5
+        const val MENU_COPY_IN = 6
+
+        /** The files the system's picker handed back: one in [Intent.getData], or several in its clip. */
+        fun chosen(data: Intent?): List<Uri> {
+            val clip = data?.clipData
+            return if (clip != null) {
+                (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri }.distinct()
+            } else {
+                listOfNotNull(data?.data)
+            }
+        }
     }
 }

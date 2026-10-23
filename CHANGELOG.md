@@ -5,6 +5,20 @@ than restating it.
 
 ## Unreleased
 
+### Copying in and out — 2026-10-23
+
+**Completed (F6).** *Copy files in* in the menu takes any number of files from the system's picker into the folder
+being looked at; *Copy out of the vault* on a document's long press says what a copy out costs and then asks where it
+goes. Each file is copied in under an *(unfinished)* name and renamed once it is whole, a taken name is refused, a copy
+that will not fit is refused before it starts, and a file keeps its date. A bar at the foot shows how far a copy has
+got, with Stop, and how it ended. Checked on the A20 against encri, a 400 MB file included.
+
+**Bug found and fixed before it shipped.** A file copied in lost its date, because encri's rename stamps the time and
+the date was set before the rename. It is set after.
+
+**Known issues.** A copy runs in the app's process, so Android may pause or stop it while another app is in front
+(`ROADMAP.md`, *Later*).
+
 ### Folders, renames, moves and deletes — 2026-10-23
 
 **Completed (F5).** *New folder* in the menu, and *Rename*, *Move* and *Delete* from a long press, each one

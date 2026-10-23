@@ -165,8 +165,12 @@ class EditsTest {
         val activity = start(Opening.Open(readOnly)).get()
         assertFalse(activity.menu().findItem(FilesActivity.MENU_NEW_FOLDER).isVisible)
         assertTrue(activity.menu().findItem(FilesActivity.MENU_MORE_RIGHTS).isVisible)
-        activity.hold(1)
+        activity.hold(0)
         assertTrue(ShadowToast.getTextOfLatestToast().startsWith("encri has not let this app change anything"))
+        // A copy out needs only reading (F6).
+        activity.hold(1)
+        assertEquals(listOf("Copy out of the vault"), shadowOf(dialog()).items.map(CharSequence::toString))
+        dialog().dismiss()
         activity.onOptionsItemSelected(RoboMenuItem(FilesActivity.MENU_MORE_RIGHTS))
         val asked = shadowOf(activity).nextStartedActivityForResult
         assertEquals("com.systemhalted.encri.api.action.AUTHORIZE", asked.intent.action)
@@ -178,7 +182,10 @@ class EditsTest {
         assertTrue(activity.menu().findItem(FilesActivity.MENU_NEW_FOLDER).isVisible)
         assertFalse(activity.menu().findItem(FilesActivity.MENU_MORE_RIGHTS).isVisible)
         activity.hold(1)
-        assertEquals(listOf("Rename", "Move", "Delete"), shadowOf(dialog()).items.map(CharSequence::toString))
+        assertEquals(
+            listOf("Copy out of the vault", "Rename", "Move", "Delete"),
+            shadowOf(dialog()).items.map(CharSequence::toString),
+        )
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.systemhalted.encri.files.browse.Listing
 import com.systemhalted.encri.files.link.Asked
 import com.systemhalted.encri.files.link.LinkState
 import com.systemhalted.encri.files.link.Opening
+import com.systemhalted.encri.files.transfer.Transfer
 
 /** The one thing the user can do about the state the screen is in, if there is one. */
 enum class Remedy {
@@ -45,13 +46,35 @@ data class Screen(
     val moving: String? = null,
     /** Whether the folder being looked at can take the document being moved. */
     val canMoveHere: Boolean = false,
+    /** A copy running, or the one that last ended until the user dismisses it (F6). */
+    val transfer: Transfer? = null,
+    /** Whether the copy's bar may name what it copied: only over an open vault that is not locked (F2). */
+    val namesShown: Boolean = false,
 ) {
+    /** Whether a copy can be started: one at a time (F6). */
+    val canStartCopy: Boolean get() = transfer !is Transfer.Running
+
+    /** Whether files can be copied in here: making a document needs both rights, and nothing is being moved. */
+    val canCopyIn: Boolean get() = Right.CREATE in rights && Right.WRITE in rights && moving == null && canStartCopy
+
     companion object {
         fun of(
             state: LinkState,
             path: List<EncriDocument>,
             listing: Listing,
             moving: EncriDocument? = null,
+            transfer: Transfer? = null,
+        ): Screen =
+            drawn(state, path, listing, moving).copy(
+                transfer = transfer,
+                namesShown = state is LinkState.Open && !state.locked,
+            )
+
+        private fun drawn(
+            state: LinkState,
+            path: List<EncriDocument>,
+            listing: Listing,
+            moving: EncriDocument?,
         ): Screen =
             when (state) {
                 LinkState.Idle, LinkState.Connecting -> {

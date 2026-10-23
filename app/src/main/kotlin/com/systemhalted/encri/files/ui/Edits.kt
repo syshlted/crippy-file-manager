@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 
 /**
  * The changes a user makes to the vault from this app: a new folder, a rename, a move and a delete
- * (AGENTS.md F5).
+ * (AGENTS.md F5), and the copy out a long press offers beside them (F6).
  *
  * Each is one request to encri, which checks the right and the name itself (encri D120), so nothing here
  * decides whether a change is allowed: it offers what the session's rights cover and reports what encri
@@ -35,14 +35,18 @@ class Edits(
     private val vaults: Vaults,
     private val settings: Settings,
     private val scope: CoroutineScope,
+    /** Asks the system's picker where a copy of the document goes, once the user has read what that costs. */
+    private val copyOut: (EncriDocument) -> Unit,
 ) {
-    /** The changes [document] offers, as far as [rights] allow. */
+    /** What [document] offers: as far as [rights] allow, and a copy out when [canCopy] and it is not a folder. */
     fun offer(
         document: EncriDocument,
         rights: Set<Right>,
+        canCopy: Boolean,
     ) {
         val actions =
             buildList {
+                if (canCopy && !document.isFolder) add(R.string.action_copy_out to { confirmCopyOut(document) })
                 if (Right.WRITE in rights) add(R.string.action_rename to { rename(document) })
                 if (Right.MOVE in rights) add(R.string.action_move to { vaults.browser.startMove(document) })
                 if (Right.DELETE in rights) add(R.string.action_delete to { confirmDelete(document) })
@@ -76,6 +80,20 @@ class Edits(
         askName(Operation.RENAME, R.string.rename, document.name, R.string.action_rename) { name ->
             if (name != document.name) change(Operation.RENAME) { it.rename(document.id, name) }
         }
+
+    /**
+     * Says, before anything leaves, that the copy is plaintext in another app's keeping (encri D123), and only
+     * then asks the picker where it goes.
+     */
+    private fun confirmCopyOut(document: EncriDocument) =
+        show(
+            AlertDialog
+                .Builder(activity)
+                .setTitle(activity.getString(R.string.copy_out_title, document.name))
+                .setMessage(R.string.copy_out_explain)
+                .setPositiveButton(R.string.copy_out_choose) { _, _ -> copyOut(document) }
+                .setNegativeButton(android.R.string.cancel, null),
+        )
 
     private fun confirmDelete(document: EncriDocument) {
         val explain = if (document.isFolder) R.string.delete_folder_explain else R.string.delete_document_explain

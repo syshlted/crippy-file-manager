@@ -5,10 +5,12 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ListView
+import android.widget.ProgressBar
 import android.widget.TextView
 import com.systemhalted.encri.client.EncriDocument
 import com.systemhalted.encri.files.R
 import com.systemhalted.encri.files.browse.Previews
+import com.systemhalted.encri.files.transfer.Transfer
 
 /**
  * The browsing screen's views, built in code as encri's screens are, with no layout and no AndroidX
@@ -30,6 +32,9 @@ class FilesViews(
         fun onMoveHere()
 
         fun onMoveCancelled()
+
+        /** The copy bar's one button: Stop while a copy runs, and OK once it has ended (F6). */
+        fun onTransferButton()
     }
 
     private val message = TextView(activity)
@@ -59,6 +64,22 @@ class FilesViews(
             addView(buttons)
         }
 
+    private val transferText = TextView(activity)
+    private val transferProgress =
+        ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = TransferWords.PROGRESS_MAX
+        }
+    private val transferButton = Button(activity).apply { setOnClickListener { actions.onTransferButton() } }
+
+    /** Shown at the foot of the screen while a copy runs, and until the user has read how it ended (F6). */
+    private val transferBar =
+        LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(transferText)
+            addView(transferProgress)
+            addView(transferButton)
+        }
+
     /** The remedy [remedyButton] offers, so a tap reports the one that was drawn. */
     private var remedy: Remedy? = null
 
@@ -80,6 +101,7 @@ class FilesViews(
             addView(remedyButton)
             addView(list, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
             addView(movingBar)
+            addView(transferBar)
         }
 
     @Suppress("SpreadOperator") // A message has one argument at most; the copy costs nothing.
@@ -93,6 +115,24 @@ class FilesViews(
         movingBar.visibility = if (screen.moving == null) View.GONE else View.VISIBLE
         screen.moving?.let { movingText.text = activity.getString(R.string.moving, it) }
         moveHere.isEnabled = screen.canMoveHere
+        renderTransfer(screen.transfer, screen.namesShown)
+    }
+
+    private fun renderTransfer(
+        transfer: Transfer?,
+        namesShown: Boolean,
+    ) {
+        transferBar.visibility = if (transfer == null) View.GONE else View.VISIBLE
+        if (transfer == null) return
+        transferText.text = TransferWords.of(activity, transfer, namesShown)
+        val running = transfer as? Transfer.Running
+        transferProgress.visibility = if (running == null) View.GONE else View.VISIBLE
+        if (running != null) {
+            val progress = TransferWords.progressOf(running)
+            transferProgress.isIndeterminate = progress == null
+            progress?.let { transferProgress.progress = it }
+        }
+        transferButton.setText(if (running == null) android.R.string.ok else R.string.transfer_stop)
     }
 
     /** Draws every row again: whether previews are shown changed. */
