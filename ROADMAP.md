@@ -18,7 +18,10 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
    built; see F6.
 4. ~~**Sharing out**~~ **Done 2026-10-23 (F7)**, one document at a time.
 5. **encri's backup screens, by their public actions** (encri D123): *Back up*, *Save a backup file* and
-   *Restore*. Waits for encri to give the three screens their actions, which is encri's step 13 item 6.
+   *Restore*. ~~Waits for encri to give the three screens their actions, which is encri's step 13 item 6.~~
+   **Unblocked 2026-10-26:** encri exports the three screens (encri D133), and encri-api names their actions
+   and gives `Encri.backupsIntent()`, `saveBackupFileIntent()` and `restoreIntent()` (encri-api L20). Each needs
+   no session. The screen takes nothing from the Intent and returns no result, and it opens in this app's task.
 6. **Device tests against encri**, as encri-api's L13 runs them: install encri, let the test in, and drive
    this app's screen from another process. The first run was by hand on the A20 (F2).
 7. **The visible name.** "Encri Files" is for now (F1).
