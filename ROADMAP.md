@@ -22,6 +22,9 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
    **Unblocked 2026-10-26:** encri exports the three screens (encri D133), and encri-api names their actions
    and gives `Encri.backupsIntent()`, `saveBackupFileIntent()` and `restoreIntent()` (encri-api L20). Each needs
    no session. The screen takes nothing from the Intent and returns no result, and it opens in this app's task.
+   **Since encri D137 (2026-10-27)** the scheduled backup leaves encri for two backup apps of its own, so *Back up*
+   will open one of them rather than encri, and `backupsIntent()` changes in encri-api before its first release.
+   *Save a backup file* and *Restore* stay encri's.
 6. **Device tests against encri**, as encri-api's L13 runs them: install encri, let the test in, and drive
    this app's screen from another process. The first run was by hand on the A20 (F2).
 7. **The visible name.** "Encri Files" is for now (F1).
@@ -36,6 +39,9 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 
 ## Before the first release
 
+- **One first release with encri** (encri D136, 2026-10-27): internal testing on Google Play this week, where
+  `com.systemhalted.encri.files` is registered. This app's release is built by GitHub's CI and the maintainer and
+  must agree (encri D116), so encri-api and this repository are pushed first (below).
 - **Signing with encri's key**, which encri D115 sets out, and the fingerprints file it lists.
 - **A reproducible release build**, checked as encri's is (encri D116).
 - **A registry entry** in encri-api's `registry/` once this app has a release key (encri D114, D122).
