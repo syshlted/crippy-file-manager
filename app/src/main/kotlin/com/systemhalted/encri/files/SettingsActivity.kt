@@ -1,7 +1,9 @@
 package com.systemhalted.encri.files
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.MenuItem
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -13,7 +15,8 @@ import com.systemhalted.encri.files.ui.padForSystemBars
 
 /**
  * This app's settings (AGENTS.md F3). Each says that it changes Encri Files alone: encri's own screens,
- * and what encri answers other apps, are set in encri (encri D112).
+ * and what encri answers other apps, are set in encri (encri D112). Below them, the third-party notices
+ * (F10), which belong to no state of the vault and so to no screen of the browser.
  *
  * Not exported: nothing outside this app has a reason to start it.
  */
@@ -57,6 +60,16 @@ class SettingsActivity : Activity() {
                     window.followScreenshotSetting(allowed)
                 }
             }
+        // A row rather than a switch: it opens the notices (F10), in the switches' own text size.
+        val notices =
+            TextView(this).apply {
+                setText(R.string.notices)
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, previews.textSize)
+                val pressed = TypedValue()
+                theme.resolveAttribute(android.R.attr.selectableItemBackground, pressed, true)
+                setBackgroundResource(pressed.resourceId)
+                setOnClickListener { startActivity(Intent(this@SettingsActivity, NoticesActivity::class.java)) }
+            }
         val column =
             LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
@@ -64,6 +77,8 @@ class SettingsActivity : Activity() {
                 addView(explanation(R.string.setting_previews_explain))
                 addView(screenshots)
                 addView(explanation(R.string.setting_screenshots_explain))
+                addView(notices)
+                addView(explanation(R.string.notices_explain))
             }
         return ScrollView(this).apply {
             setPadding(pad, pad, pad, pad)

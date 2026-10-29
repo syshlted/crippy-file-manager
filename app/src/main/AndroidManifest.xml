@@ -44,6 +44,11 @@
             android:name=".SettingsActivity"
             android:exported="false" />
 
+        <!-- The third-party notices, opened from the settings (F10). -->
+        <activity
+            android:name=".NoticesActivity"
+            android:exported="false" />
+
         <!--
           The service a copy runs behind (F8). Not exported, binds to nothing: it holds the process in the
           foreground and the picker's grants for the copy, which the application runs.

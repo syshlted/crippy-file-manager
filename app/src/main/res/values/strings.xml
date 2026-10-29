@@ -38,6 +38,8 @@
     <string name="setting_previews">Show previews</string>
     <string name="setting_previews_explain">When this is on, Encri Files shows a small picture of each photo and video in a folder. encri makes each picture and hands it to this app, which keeps it in memory only, never on the phone\'s storage, and drops them all when the vault locks. When it is off, this app asks encri for no pictures at all and shows names alone. This changes Encri Files alone: what other apps\' file pickers show is set in encri.</string>
     <string name="setting_screenshots">Allow screenshots</string>
+    <string name="notices">Third-party notices</string>
+    <string name="notices_explain">The open-source software Encri Files is built with, and the licences it is used under.</string>
     <string name="setting_screenshots_explain">When this is off, Android blocks screenshots and screen recordings of Encri Files, keeps it off any screen you cast to, and shows a blank card for it among your recent apps. When it is on, anything this app shows, such as the names and previews of what is in your vault, can be captured, and a screenshot is kept in your photos, outside the vault, where photo backups and other apps can reach it. This changes Encri Files alone: encri\'s own screens always block screenshots.</string>
 
     <string name="menu_more_rights">Allow more in encri</string>

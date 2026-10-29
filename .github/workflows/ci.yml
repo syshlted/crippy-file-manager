@@ -54,6 +54,10 @@ jobs:
       - name: JVM unit tests (all modules)
         run: scripts/hooks/gradle-task allUnitTests
 
+      # Every module an APK carries is named in the notices it shows, at its version, and nothing else (F10).
+      - name: Third-party notices
+        run: scripts/hooks/gradle-task :app:checkThirdPartyNotices
+
       # The release APK, minified, as well as the debug one: the unit tests compile only the debug variant.
       - name: Build the APKs
         run: scripts/hooks/gradle-task assemble

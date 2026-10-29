@@ -46,6 +46,8 @@ pre-push:
       run: scripts/ci/encri-api check
 
     # allUnitTests rather than testDebugUnitTest, for encri D11's reason: a name-matched
-    # task silently skips every module that lacks it. Mirrors ci.yml.
+    # task silently skips every module that lacks it. Mirrors ci.yml. The third-party
+    # notices gate (F10) rides in the same invocation, because two Gradle runs at once
+    # fight over the included encri-api build's outputs.
     - name: unit-tests
-      run: scripts/hooks/gradle-task allUnitTests
+      run: scripts/hooks/gradle-task allUnitTests :app:checkThirdPartyNotices

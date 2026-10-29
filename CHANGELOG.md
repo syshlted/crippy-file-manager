@@ -12,6 +12,10 @@ than restating it.
 held. The pre-push hook refuses a push while `../encri-api` is anywhere else. The Gradle wrapper and its distribution
 are held to the checksums gradle.org publishes.
 
+**Third-party notices (F10).** *Settings* ends with *Third-party notices*, which shows the copyright notices and
+licences of the libraries the app is built with, as their licences require of a binary distribution. A build fails
+when the app carries a library the notices do not name, at its version, or the notices name one it does not carry.
+
 ### A copy that carries on — 2026-10-23
 
 **Completed (F8).** A copy into or out of the vault runs behind a foreground service and a notification, so it carries

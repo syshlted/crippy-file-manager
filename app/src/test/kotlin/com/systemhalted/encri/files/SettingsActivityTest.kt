@@ -3,6 +3,7 @@ package com.systemhalted.encri.files
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Switch
+import android.widget.TextView
 import com.systemhalted.encri.files.settings.Settings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.fakes.RoboMenuItem
 
@@ -21,9 +23,11 @@ import org.robolectric.fakes.RoboMenuItem
 class SettingsActivityTest {
     private val settings = Settings(RuntimeEnvironment.getApplication())
 
-    private fun SettingsActivity.switch(index: Int): Switch =
+    private fun SettingsActivity.row(index: Int): TextView =
         ((findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as ViewGroup).getChildAt(0) as ViewGroup)
-            .getChildAt(index) as Switch
+            .getChildAt(index) as TextView
+
+    private fun SettingsActivity.switch(index: Int): Switch = row(index) as Switch
 
     private fun SettingsActivity.previews(): Switch = switch(0)
 
@@ -66,6 +70,20 @@ class SettingsActivityTest {
         assertFalse(settings.previewsShown)
         val again = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
         assertFalse(again.previews().isChecked)
+    }
+
+    @Test
+    fun `the notices are a row below the settings, and open their own screen`() {
+        val activity = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
+        val notices = activity.row(4)
+        assertEquals("Third-party notices", notices.text.toString())
+
+        assertTrue(notices.performClick())
+
+        assertEquals(
+            NoticesActivity::class.java.name,
+            shadowOf(activity).nextStartedActivity.component?.className,
+        )
     }
 
     @Test
