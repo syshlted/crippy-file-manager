@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# Checks the Gradle wrapper against what gradle.org publishes for its version (F9; encri's B115).
+#
+#   scripts/ci/gradle-wrapper-check [REPO]
+#
+# Two things, each against the checksum gradle.org publishes beside the release, which is the trust
+# anchor nothing in this repository can move: gradle/wrapper/gradle-wrapper.jar must be that version's
+# wrapper, and gradle-wrapper.properties' distributionSha256Sum must be that version's distribution, so
+# the wrapper refuses a distribution altered on the way down or in the shared wrapper/dists cache. What a
+# CI host's wrapper-validation step does, made a script so reproduce.sh can hold a commit to it too.
+#
+# Stricter than that step in one way: the jar must be the wrapper of the version distributionUrl names,
+# not any wrapper Gradle ever shipped. So bump Gradle by running `./gradlew wrapper --gradle-version X`
+# twice, which is Gradle's own advice, and put the new distributionSha256Sum in the same commit.
+#
+# Exits 0 when both match, 1 when either does not or gradle.org cannot be asked; it never passes a
+# check it could not make.
+set -euo pipefail
+
+REPO="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
+PROPERTIES="$REPO/gradle/wrapper/gradle-wrapper.properties"
+JAR="$REPO/gradle/wrapper/gradle-wrapper.jar"
+PUBLISHED="https://services.gradle.org/distributions"
+
+fail() { printf 'gradle-wrapper-check: FAIL  %s\n' "$1" >&2; exit 1; }
+
+property() { sed -n "s/^$1=//p" "$PROPERTIES" | tr -d '\r'; }
+
+url="$(property distributionUrl)"
+version="$(printf '%s' "$url" | sed -n 's|.*/gradle-\([0-9][0-9.]*[0-9]\)-bin\.zip$|\1|p')"
+[ -n "$version" ] || fail "distributionUrl is not a gradle.org -bin.zip: $url"
+case "$url" in
+  'https\://services.gradle.org/distributions/'*) ;;
+  *) fail "distributionUrl is not gradle.org's: $url" ;;
+esac
+
+published() {
+  curl -fsSL --max-time 30 "$PUBLISHED/$1.sha256" 2>/dev/null | tr -d '[:space:]' \
+    || fail "gradle.org did not answer for $1.sha256, so nothing was checked"
+}
+
+wanted_jar="$(published "gradle-$version-wrapper.jar")"
+wanted_zip="$(published "gradle-$version-bin.zip")"
+[ ${#wanted_jar} -eq 64 ] && [ ${#wanted_zip} -eq 64 ] || fail "gradle.org's answer for $version is not a checksum"
+
+actual_jar="$(sha256sum "$JAR" | cut -d' ' -f1)"
+[ "$actual_jar" = "$wanted_jar" ] \
+  || fail "gradle-wrapper.jar is $actual_jar, and Gradle $version's wrapper is $wanted_jar"
+
+stated_zip="$(property distributionSha256Sum)"
+[ -n "$stated_zip" ] || fail "gradle-wrapper.properties has no distributionSha256Sum; Gradle $version's is $wanted_zip"
+[ "$stated_zip" = "$wanted_zip" ] \
+  || fail "distributionSha256Sum is $stated_zip, and Gradle $version's distribution is $wanted_zip"
+
+printf 'gradle-wrapper-check: ok  Gradle %s, wrapper and distribution as gradle.org publishes them\n' "$version"

@@ -9,7 +9,8 @@ than restating it.
 
 **Under way (F9).** Every build but a developer's is made against the encri-api commit `config/encri-api.pin` names,
 `c27f139`, which encri's first release was built against; CI had been building against whatever encri-api's `master`
-held. The pre-push hook refuses a push while `../encri-api` is anywhere else.
+held. The pre-push hook refuses a push while `../encri-api` is anywhere else. The Gradle wrapper and its distribution
+are held to the checksums gradle.org publishes.
 
 ### A copy that carries on — 2026-10-23
 

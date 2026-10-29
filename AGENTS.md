@@ -538,6 +538,13 @@ which lists this app in the registry under the app signing key and puts that key
 *Measured:* the suite, 285 runs, and the minified release built against it with no change here; `fetch` from GitHub
 put a clone at the pin; `check` on a clone one commit back failed with exit 1.
 
+**The Gradle wrapper is held to what gradle.org publishes.** A release's two builds share one Gradle distribution, so
+an altered one would run inside both and both would agree (encri B115). `gradle-wrapper.properties` now carries
+`distributionSha256Sum`, the wrapper refuses a distribution that does not match it, and `scripts/ci/gradle-wrapper-check`,
+encri's, holds the jar and that sum to the checksums gradle.org publishes for the version, first in `ci.yml`. The jar and
+the sum are encri's, for the same Gradle 9.7.1. *Measured:* the check failed before the sum was added, naming it, and
+passes after.
+
 ---
 
 ## Open questions
