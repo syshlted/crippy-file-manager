@@ -1,0 +1,54 @@
+name: reproducible
+
+# Builds the release twice from one commit and fails if the two differ (AGENTS.md F9, encri D116).
+#
+# On a tag this is the build a release is signed from: the unsigned APK and bundle it uploads, with
+# their SHA-256s, are what the maintainer's own scripts/release/reproduce.sh must agree with before
+# the offline key signs anything (encri D115). Weekly, it is the check that a dependency or a toolchain
+# bump has not made the build depend on where or when it runs. Not on every pull request: two
+# release builds with R8 cost several minutes, and nothing about a pull request needs them.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+  schedule:
+    - cron: '23 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reproducible-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    steps:
+      # The script clones from this checkout, and a shallow repository cannot be cloned.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+
+      # No encri-api step before this one, unlike ci.yml: the script clones encri-api beside
+      # each of its own clones, at the commit the built commit's config/encri-api.pin names (F9), and
+      # with no sibling here it fetches it from the repository the pin names.
+      - name: Build twice and compare
+        run: scripts/release/reproduce.sh "$GITHUB_SHA"
+
+      - name: Upload the unsigned release and its hashes
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: unsigned-release
+          path: build/reproducible/
+          if-no-files-found: ignore
+          retention-days: 90

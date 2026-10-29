@@ -10,7 +10,9 @@ than restating it.
 **Under way (F9).** Every build but a developer's is made against the encri-api commit `config/encri-api.pin` names,
 `c27f139`, which encri's first release was built against; CI had been building against whatever encri-api's `master`
 held. The pre-push hook refuses a push while `../encri-api` is anywhere else. The Gradle wrapper and its distribution
-are held to the checksums gradle.org publishes.
+are held to the checksums gradle.org publishes. `scripts/release/reproduce.sh` builds the release twice from one
+commit, in two environments that differ on purpose, and says whether they came out the same; GitHub's CI runs it on
+every tag, and the maintainer's run must agree with CI's before anything is signed.
 
 **Third-party notices (F10).** *Settings* ends with *Third-party notices*, which shows the copyright notices and
 licences of the libraries the app is built with, as their licences require of a binary distribution. A build fails

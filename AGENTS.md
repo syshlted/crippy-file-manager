@@ -545,6 +545,20 @@ encri's, holds the jar and that sum to the checksums gradle.org publishes for th
 the sum are encri's, for the same Gradle 9.7.1. *Measured:* the check failed before the sum was added, naming it, and
 passes after.
 
+**A release is built twice, by GitHub's CI from the tag and by the maintainer, and must come out the same** (encri
+D116 as written, which encri D136 keeps for this app). `scripts/release/reproduce.sh <commit>` and
+`compare-builds.py` are encri's, carried here because this repository is the one a stranger can read: they are what
+lets anyone rebuild a tag and hold the published APK to it, which is D115's second row and a claim encri's closed
+source cannot make for itself. The two builds differ in path, umask, timezone, locale and Gradle home, share the
+pinned Gradle and every pinned dependency, fetch encri-api at the tag's pin beside each clone, and keep the unsigned
+APK and bundle as `build/reproducible/<commit>/encri-files-<commit>-unsigned.*` with their `SHA256SUMS` and a
+provenance naming both commits. It refuses a commit that predates the pin, the wrapper's checksum or the notices
+(F10). `.github/workflows/reproducible.yml`, encri's too, runs it on every `v*` tag, weekly and by hand, and keeps
+what it built for 90 days; the maintainer's run must give the same SHA-256s before the kit is made. Nothing in
+`app/build.gradle.kts` changed for it: this app ships no native library, so encri's `keepDebugSymbols` has nothing to
+keep, and `dependenciesInfo.includeInApk = false` was there from F1. *Measured, 2026-10-29:* `27648e2` built the same
+twice, APK `568abcc2…`, bundle `cdb0983e…`, against encri-api `c27f139`.
+
 ### F10 — The third-party notices: written by hand, opened from the settings, and held to the build
 *2026-10-29 · accepted; owed before any APK leaves this machine, the internal testing track included (F9), for encri
 D138's reason. Nothing new is flagged: each choice is encri D138's, which the user confirmed, or F3's.*
