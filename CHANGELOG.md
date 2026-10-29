@@ -5,6 +5,12 @@ than restating it.
 
 ## Unreleased
 
+### The first release — 2026-10-29
+
+**Under way (F9).** Every build but a developer's is made against the encri-api commit `config/encri-api.pin` names,
+`c27f139`, which encri's first release was built against; CI had been building against whatever encri-api's `master`
+held. The pre-push hook refuses a push while `../encri-api` is anywhere else.
+
 ### A copy that carries on — 2026-10-23
 
 **Completed (F8).** A copy into or out of the vault runs behind a foreground service and a notification, so it carries

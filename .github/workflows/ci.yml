@@ -15,10 +15,6 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    env:
-      # encri-api is a build of its own beside this one until it is published (AGENTS.md F1), and a clone
-      # has no sibling, so CI checks it out into the workspace and points the build at it.
-      API: -Pencri.api.dir=${{ github.workspace }}/encri-api
     steps:
       # fetch-depth: 0 because the diff-coverage step below needs the PR's base commit to diff against.
       #
@@ -29,10 +25,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          repository: syshlted/encri-api
-          path: encri-api
+      # encri-api is a build of its own beside this one until it is published (F1), and a clone has no
+      # sibling, so it goes there first: at the commit config/encri-api.pin names, never its moving master,
+      # so what CI tests is what a release is built from (F9).
+      - name: encri-api at the pinned commit
+        run: scripts/ci/encri-api fetch ../encri-api
 
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
@@ -42,29 +39,29 @@ jobs:
       - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
 
       - name: Lint (ktlint)
-        run: scripts/hooks/gradle-task $API ktlintCheck
+        run: scripts/hooks/gradle-task ktlintCheck
 
       - name: Static analysis (detekt)
-        run: scripts/hooks/gradle-task $API detekt
+        run: scripts/hooks/gradle-task detekt
 
       # NOT testDebugUnitTest: Gradle runs a name-matched task in whichever projects have it without
       # complaining that the others lack it (encri D11).
       - name: JVM unit tests (all modules)
-        run: scripts/hooks/gradle-task $API allUnitTests
+        run: scripts/hooks/gradle-task allUnitTests
 
       # The release APK, minified, as well as the debug one: the unit tests compile only the debug variant.
       - name: Build the APKs
-        run: scripts/hooks/gradle-task $API assemble
+        run: scripts/hooks/gradle-task assemble
 
       - name: Coverage (Kover, F1)
-        run: scripts/hooks/gradle-task $API koverVerify
+        run: scripts/hooks/gradle-task koverVerify
 
       # F1, after encri D5: the module's gate stops the average sliding, and this stops a change arriving
       # uncovered while the average absorbs it. Pull requests only — a push has no base to diff against.
       - name: Diff coverage (F1, >= 85% on changed lines)
         if: github.event_name == 'pull_request'
         run: |
-          scripts/hooks/gradle-task $API koverXmlReport
+          scripts/hooks/gradle-task koverXmlReport
           python3 scripts/ci/diff-coverage.py \
             --base "${{ github.event.pull_request.base.sha }}" \
             --head "${{ github.event.pull_request.head.sha }}"

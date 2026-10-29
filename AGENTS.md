@@ -81,7 +81,8 @@ apply. Two facts matter here:
 - **Set `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`**, and never run two Gradle invocations at once:
   the included encri-api build is one more set of outputs for them to fight over.
 - **encri-api must be checked out beside this one**, at `../encri-api`, or pointed at with
-  `-Pencri.api.dir=<path>`. CI checks it out into the workspace.
+  `-Pencri.api.dir=<path>`. Before a push it must be at the commit `config/encri-api.pin` names, which the
+  pre-push hook checks and CI fetches there (F9).
 
 ---
 
@@ -519,6 +520,23 @@ permission and API 35's budget, which the S24 would take; and the G6 and the S9.
 
 1. **Notifications asked for when a copy starts**, rather than never — the copy runs either way — or at first launch.
 2. **No ending said while a screen of this app is in front.**
+
+### F9 — A release is built from a tag against a pinned encri-api, twice, and signed from a kit of its own
+*2026-10-29 · accepted, at the user's direction: Encri Files' first release goes to Google Play's internal testing
+track, and is checked as encri D116 has it, by GitHub's CI building the tag and the maintainer's build agreeing
+("Push; CI builds the tag"). encri D136 gave both apps one first release; encri's own went to the internal track the
+same day. Built in parts, each in a commit of its own, as below.*
+
+**encri-api at the commit `config/encri-api.pin` names, in every build but a developer's.** encri-api is an input to
+every APK (F1), and CI checked out its moving `master`, so a tag built twice a week apart could be built against two
+different libraries, and nothing in the tree said which. `scripts/ci/encri-api` is encri's script of the same name
+(encri B108, D126): `fetch` clones the pinned commit, `check` says whether `../encri-api` is at it with nothing
+uncommitted, and the pre-push hook runs `check`, so a push carries a pin the hook's tests ran against. CI fetches the
+pin into `../encri-api`, the sibling `settings.gradle.kts` includes by default, and no longer passes
+`-Pencri.api.dir`. The pin starts at `c27f139`, the commit encri's first release was built against (encri-api L22),
+which lists this app in the registry under the app signing key and puts that key in `EncriTrust.RELEASE_CERTIFICATES`.
+*Measured:* the suite, 285 runs, and the minified release built against it with no change here; `fetch` from GitHub
+put a clone at the pin; `check` on a clone one commit back failed with exit 1.
 
 ---
 

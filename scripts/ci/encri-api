@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+#
+# Puts encri-api at the commit config/encri-api.pin names, or says whether a checkout is there (F9).
+# encri's script of the same name, for encri's reason (encri B108, D126).
+#
+#   scripts/ci/encri-api fetch <dir>     clone encri-api into <dir>, at the pinned commit
+#   scripts/ci/encri-api check [<dir>]   is <dir> at the pinned commit, with nothing uncommitted?
+#                                        <dir> defaults to the sibling settings.gradle.kts includes
+#   scripts/ci/encri-api commit          print the pinned commit
+#
+# Environment:
+#   ENCRI_API_SOURCE   where `fetch` clones from, a URL or a local repository; default the pin's
+#                      repository. A local one may hold commits encri-api's remote does not have yet.
+#
+# Exit status: 0 done, or at the pin; 1 not at the pin, which `check` reports as a finding; 2 a refusal.
+#
+# The pin is read from the checkout this script is in, not from the directory it is run from, so a clone
+# of an older commit fetches the encri-api that commit names.
+set -uo pipefail
+
+REPO=$(cd "$(dirname "$0")/../.." && pwd)
+PIN=$REPO/config/encri-api.pin
+
+refuse() { echo "REFUSED: $*" >&2; exit 2; }
+
+[ -f "$PIN" ] || refuse "no $PIN"
+pinned() { sed -n "s/^$1=//p" "$PIN" | tail -n 1; }
+COMMIT=$(pinned commit)
+REPOSITORY=$(pinned repository)
+[[ $COMMIT =~ ^[0-9a-f]{40}$ ]] || refuse "$PIN names no full commit: '$COMMIT'"
+[ -n "$REPOSITORY" ] || refuse "$PIN names no repository"
+
+# A checkout's commit, or nothing when it is not a repository with a commit.
+head_of() { git -C "$1" rev-parse --verify --quiet 'HEAD^{commit}' 2>/dev/null; }
+uncommitted() { git -C "$1" status --porcelain 2>/dev/null | head -n 1; }
+
+case "${1:-}" in
+    commit)
+        echo "$COMMIT"
+        ;;
+
+    fetch)
+        [ $# -eq 2 ] || refuse "usage: $0 fetch <dir>"
+        dir=$2
+        source=${ENCRI_API_SOURCE:-$REPOSITORY}
+        # A directory that is already there is someone's, so it is used only when it is exactly the pin.
+        if [ -e "$dir" ]; then
+            if [ "$(head_of "$dir")" = "$COMMIT" ] && [ -z "$(uncommitted "$dir")" ]; then
+                echo "encri-api: $dir is already at $COMMIT"
+                exit 0
+            fi
+            refuse "$dir is there and is not encri-api at $COMMIT; move it, or fetch somewhere else"
+        fi
+        git clone --quiet --no-checkout "$source" "$dir" || refuse "could not clone encri-api from $source"
+        if ! git -C "$dir" checkout --quiet --detach "$COMMIT" 2>/dev/null; then
+            rm -rf -- "$dir"
+            refuse "$source has no commit $COMMIT on any branch or tag. Push encri-api, or set ENCRI_API_SOURCE to a repository that has it"
+        fi
+        # encri-api is a build of its own and finds the SDK the way this app does. Where this app finds it through
+        # local.properties rather than ANDROID_HOME, encri-api needs the same file, or its configuration
+        # fails with "SDK location not found" for a path the caller never mentioned.
+        if [ -f "$REPO/local.properties" ]; then cp "$REPO/local.properties" "$dir/"; fi
+        echo "encri-api: $dir at $COMMIT, from $source"
+        ;;
+
+    check)
+        [ $# -le 2 ] || refuse "usage: $0 check [<dir>]"
+        dir=${2:-$(dirname "$REPO")/encri-api}
+        head=$(head_of "$dir") || refuse "no encri-api checkout at $dir"
+        if [ "$head" != "$COMMIT" ]; then
+            echo "encri-api at $dir is at ${head:0:12}, and config/encri-api.pin names ${COMMIT:0:12}." >&2
+            echo "Point the pin at the commit Encri Files was tested against, or check that commit out there." >&2
+            exit 1
+        fi
+        if [ -n "$(uncommitted "$dir")" ]; then
+            echo "encri-api at $dir is at the pin and has uncommitted changes, which no other build has." >&2
+            exit 1
+        fi
+        echo "encri-api: $dir is at the pin, ${COMMIT:0:12}"
+        ;;
+
+    *)
+        sed -n '3,16p' "$0" | sed 's/^# \{0,1\}//' >&2
+        exit 2
+        ;;
+esac

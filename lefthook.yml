@@ -39,6 +39,12 @@ pre-push:
       use_stdin: true
       run: scripts/hooks/pre-push {1}
 
+    # The unit tests below build against ../encri-api as it stands, and CI builds against the
+    # commit config/encri-api.pin names (F9). Refused while the two differ, so a push carries
+    # a pin the tests here have actually run against. CI's half is that it builds the pin.
+    - name: encri-api-pin
+      run: scripts/ci/encri-api check
+
     # allUnitTests rather than testDebugUnitTest, for encri D11's reason: a name-matched
     # task silently skips every module that lacks it. Mirrors ci.yml.
     - name: unit-tests

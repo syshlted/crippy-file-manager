@@ -44,12 +44,14 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
   must agree (encri D116), so encri-api and this repository are pushed first (below).
 - **Signing with encri's key**, which encri D115 sets out, and the fingerprints file it lists.
 - **A reproducible release build**, checked as encri's is (encri D116).
-- **A registry entry** in encri-api's `registry/` once this app has a release key (encri D114, D122).
+- ~~**A registry entry** in encri-api's `registry/` once this app has a release key (encri D114, D122).~~ **Done
+  2026-10-28** as encri-api's L22, under the app signing key's certificate; the pin names that commit (F9).
 
 ## When the repository is pushed
 
-- **encri-api's rename must be on GitHub first.** CI checks encri-api's `master` out beside this one, and
-  that `master` predates the rename (encri-api L19), so every job fails to build until it is pushed.
+- ~~**encri-api's rename must be on GitHub first.** CI checks encri-api's `master` out beside this one, and
+  that `master` predates the rename (encri-api L19), so every job fails to build until it is pushed.~~ **Done:**
+  encri-api was pushed on 2026-10-29 at `c27f139`, and CI now fetches the commit `config/encri-api.pin` names (F9).
 - **Branch protection on `master`**, as encri-api lists it: signed commits, a review, `ci` and
   `commit-policy` required, no force push, merge commits or rebases only.
 - **CodeQL and dependency scanning**, carried across from encri-api (its L7 and L10), which this

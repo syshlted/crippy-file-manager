@@ -1,0 +1,13 @@
+# The encri-api commit Encri Files is built against (F9).
+#
+# Encri Files builds encri-api's client from source, as an included build beside this checkout
+# (settings.gradle.kts, F1), so that source is an input to every APK. A developer's checkout uses whatever
+# ../encri-api holds. Every other build puts encri-api at this commit first, through scripts/ci/encri-api:
+# ci.yml, reproducible.yml and scripts/release/reproduce.sh. So a release names the encri-api it was built
+# from by this line in its tagged tree, which a reproducible build needs (encri D116, D126).
+#
+# Bump it in the commit that needs the newer encri-api. The pre-push hook refuses a push while ../encri-api
+# is anywhere else, because the unit tests it runs would then have tested a different encri-api from the one
+# CI builds. Push encri-api first: CI fetches the commit from the repository below.
+repository=https://github.com/syshlted/encri-api.git
+commit=c27f139dfbc2efab5910a91d053b904019f28321
