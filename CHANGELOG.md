@@ -20,6 +20,13 @@ keys `config/release-certificates` names; `FINGERPRINTS.md` lists them.
 licences of the libraries the app is built with, as their licences require of a binary distribution. A build fails
 when the app carries a library the notices do not name, at its version, or the notices name one it does not carry.
 
+**Checked (F9).** The minified release build, which had never been installed before, was walked through on the API 34
+emulator against encri: let in, browsing, the settings and notices, copies in and out byte for byte, folders, moving,
+deleting, sharing, opening with another app, a preview, and locking. Nothing crashed.
+
+**Bug found and fixed before it shipped.** The *Third-party notices* row in the settings was drawn in the grey of the
+explanations around it, so it did not look like something to press. It is drawn as the switches are now.
+
 ### A copy that carries on — 2026-10-23
 
 **Completed (F8).** A copy into or out of the vault runs behind a foreground service and a notification, so it carries

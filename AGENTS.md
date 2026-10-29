@@ -538,12 +538,12 @@ which lists this app in the registry under the app signing key and puts that key
 *Measured:* the suite, 285 runs, and the minified release built against it with no change here; `fetch` from GitHub
 put a clone at the pin; `check` on a clone one commit back failed with exit 1.
 
-**The Gradle wrapper is held to what gradle.org publishes.** A release's two builds share one Gradle distribution, so
-an altered one would run inside both and both would agree (encri B115). `gradle-wrapper.properties` now carries
-`distributionSha256Sum`, the wrapper refuses a distribution that does not match it, and `scripts/ci/gradle-wrapper-check`,
-encri's, holds the jar and that sum to the checksums gradle.org publishes for the version, first in `ci.yml`. The jar and
-the sum are encri's, for the same Gradle 9.7.1. *Measured:* the check failed before the sum was added, naming it, and
-passes after.
+**The Gradle wrapper is held to what gradle.org publishes.** A release's two builds share one Gradle distribution, so an
+altered one would run inside both and both would agree (encri B115). `gradle-wrapper.properties` now carries
+`distributionSha256Sum`, the wrapper refuses a distribution that does not match it, and
+`scripts/ci/gradle-wrapper-check`, encri's, holds the jar and that sum to the checksums gradle.org publishes for the
+version, first in `ci.yml`. The jar and the sum are encri's, for the same Gradle 9.7.1. *Measured:* the check failed
+before the sum was added, naming it, and passes after.
 
 **A release is built twice, by GitHub's CI from the tag and by the maintainer, and must come out the same** (encri
 D116 as written, which encri D136 keeps for this app). `scripts/release/reproduce.sh <commit>` and
@@ -584,14 +584,27 @@ names one app's files and expects one app's upload key; and encri's measured scr
 costs: `reproduce.sh`, `compare-builds.py`, `kit.sh` and `sign.sh` are now in two repositories, and a fix to one has
 to be made to the other, as encri's B138 already is in both.
 
-*Measured, 2026-10-29,* with a kit of `27648e2` (21 MB) and three RSA-4096 scratch keystores under the names above:
-the kit rehearsed itself; a real signing through a pseudo-terminal asked three questions, one per tool; with keys the
-kit did not expect it failed with exit 1 and left no `signed/`; Ctrl-C at the third question, the terminal closed at
-the second or the third, SIGTERM to `sign.sh` at the second, and jarsigner killed at its question each ended with no
+**The minified build is walked through before it is signed** (encri D140), because no record showed a release build of
+this app had ever been installed: R8's usual failures, a class reached by reflection, would reach every tester at
+first launch. *Done 2026-10-29 on the API 34 emulator with `a2ef986`*, which `reproduce.sh` built the same twice (APK
+`079033c4…`, bundle `fa4750e7…`), signed with the debug key and installed fresh beside encri's own walked-through
+build: Encri Files connected, was let in through encri's consent screen (which, the copy being debug-signed, said an
+app of this name is reviewed but *this one is signed with a different key*, as it should), listed the vault, opened
+the settings and the notices, asked for notifications when the first copy started (API 33's question, which had never
+run on a device), copied a 5 MiB file in with its date and out again with the same SHA-256, made, renamed and deleted a
+folder, moved a document into it, shared one (encri not among the targets), opened one in HTML Viewer, showed a
+picture's preview, and locked and unlocked through encri. Nothing crashed, and logcat held no class, method or field
+R8 had removed. It found one thing, F10's row drawn as an explanation; the build after the fix was installed again and
+the settings looked at.
+
+*Measured, 2026-10-29,* with a kit of `27648e2` (21 MB) and three RSA-4096 scratch keystores under the names above: the
+kit rehearsed itself; a real signing through a pseudo-terminal asked three questions, one per tool; with keys the kit
+did not expect it failed with exit 1 and left no `signed/`; Ctrl-C at the third question, the terminal closed at the
+second or the third, SIGTERM to `sign.sh` at the second, and jarsigner killed at its question each ended with no
 `signed/` and no process left; and a kit expecting the scratch keys signed, its files the build but for alignment
 padding (all 19 entries) and signing's 4 bundle entries, and `--verify` passed them with that kit and failed them with
-the real one. *Seen once and not reproduced:* a `signed/` left holding the signed APK alone, when the terminal, `sign.sh`
-and bundletool were each sent SIGTERM at the same moment; `--verify` refuses such a directory for want of
+the real one. *Seen once and not reproduced:* a `signed/` left holding the signed APK alone, when the terminal,
+`sign.sh` and bundletool were each sent SIGTERM at the same moment; `--verify` refuses such a directory for want of
 `SIGNED.txt`, and a second signing refuses to write over it.
 
 ### F10 — The third-party notices: written by hand, opened from the settings, and held to the build
@@ -618,16 +631,18 @@ app owes none: every module a variant's runtime classpath resolves to is named i
 `group:artifact:version`, and the asset names nothing else. By version, so a bump fails until the new release has
 been read. encri-api's modules are this project's own. It runs in `check`, the pre-push hook and `ci.yml`.
 
-**Opened from the settings**, as a row below the two switches, because the menu offers *Settings* in every state and
-a licence's terms do not depend on there being a vault. The screen follows the screenshot setting as every window
-here does (F3), where encri's notices are always secure: here the rule is the setting, not every window. Not
-exported; the text is selectable.
+**Opened from the settings**, as a row below the two switches, because the menu offers *Settings* in every state and a
+licence's terms do not depend on there being a vault. The row is drawn in the switches' size and colour and is as tall
+as a touch target: walking the release build through showed a plain `TextView` there in the explanations' grey, which
+read as one more explanation rather than something to press. The screen follows the screenshot setting as every window
+here does (F3), where encri's notices are always secure: here the rule is the setting, not every window. Not exported;
+the text is selectable.
 
 *Verified:* under Robolectric at API 27 and 36, the screen shows the whole asset as `noticeText` draws it, to the end
 of the Apache License and with kotlinx.coroutines' NOTICE; it blocks screenshots until they are allowed; no other
-app can open it; up leaves it; and the settings row opens it. The gate passes on both variants, which carry the same
-six modules, and fails three ways: a module's line removed, a version moved (both lines named), and a module named
-that does not ship.
+app can open it; up leaves it; and the settings row opens it, drawn as the switches are and not as the explanations,
+which fails with the colour taken out. The gate passes on both variants, which carry the same six modules, and fails
+three ways: a module's line removed, a version moved (both lines named), and a module named that does not ship.
 
 ---
 

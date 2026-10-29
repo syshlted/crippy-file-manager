@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.MenuItem
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -60,11 +61,15 @@ class SettingsActivity : Activity() {
                     window.followScreenshotSetting(allowed)
                 }
             }
-        // A row rather than a switch: it opens the notices (F10), in the switches' own text size.
+        // A row rather than a switch: it opens the notices (F10). In the switches' own size and colour, and as tall
+        // as a touch target, because a plain TextView is drawn in the explanations' grey and reads as one of them.
         val notices =
             TextView(this).apply {
                 setText(R.string.notices)
                 setTextSize(TypedValue.COMPLEX_UNIT_PX, previews.textSize)
+                setTextColor(previews.textColors)
+                minHeight = (TOUCH_TARGET_DP * resources.displayMetrics.density).toInt()
+                gravity = Gravity.CENTER_VERTICAL
                 val pressed = TypedValue()
                 theme.resolveAttribute(android.R.attr.selectableItemBackground, pressed, true)
                 setBackgroundResource(pressed.resourceId)
@@ -96,5 +101,8 @@ class SettingsActivity : Activity() {
 
     private companion object {
         const val PADDING_DP = 16
+
+        /** The platform's minimum touch target. */
+        const val TOUCH_TARGET_DP = 48
     }
 }

@@ -77,6 +77,9 @@ class SettingsActivityTest {
         val activity = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
         val notices = activity.row(4)
         assertEquals("Third-party notices", notices.text.toString())
+        // Drawn as the switches are, not in the explanations' grey, so it reads as something to press.
+        assertEquals(activity.previews().currentTextColor, notices.currentTextColor)
+        assertNotEquals(activity.row(1).currentTextColor, notices.currentTextColor)
 
         assertTrue(notices.performClick())
 
