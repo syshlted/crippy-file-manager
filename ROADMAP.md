@@ -42,8 +42,16 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 - **One first release with encri** (encri D136, 2026-10-27): internal testing on Google Play this week, where
   `com.systemhalted.encri.files` is registered. This app's release is built by GitHub's CI and the maintainer and
   must agree (encri D116), so encri-api and this repository are pushed first (below).
-- **Signing with encri's key**, which encri D115 sets out, and the fingerprints file it lists.
-- **A reproducible release build**, checked as encri's is (encri D116).
+- ~~**Signing with encri's key**, which encri D115 sets out, and the fingerprints file it lists.~~ **Built
+  2026-10-29 (F9):** a signing kit of this repository's own, which expects encri's app signing and transparency keys
+  and this app's upload key; `FINGERPRINTS.md` is encri-api's, word for word in its tables.
+- ~~**A reproducible release build**, checked as encri's is (encri D116).~~ **Built 2026-10-29 (F9):**
+  `reproduce.sh`, and `reproducible.yml` on every tag.
+- **Then, in order** (F9): the minified build walked through on an emulator against encri before it is signed (encri
+  D140); this repository pushed and its `master` protected (below); a signed `v0.1.0` tag, which CI builds; the
+  maintainer's `reproduce.sh v0.1.0` agreeing with CI's SHA-256s; the kit made and signed on the key machine, no
+  earlier than 7:03 PM on 2026-10-30, when Play takes this app's own upload key; `sign.sh --verify` here; and the
+  bundle uploaded to the internal testing track with the listing's automatic protection off (encri D144).
 - ~~**A registry entry** in encri-api's `registry/` once this app has a release key (encri D114, D122).~~ **Done
   2026-10-28** as encri-api's L22, under the app signing key's certificate; the pin names that commit (F9).
 

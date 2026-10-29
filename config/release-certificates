@@ -1,0 +1,16 @@
+# The certificates a release of Encri Files is signed with, each as the SHA-256 of the certificate (F9;
+# encri D140, D141).
+#
+# scripts/release/kit.sh copies this file into every signing kit, and the kit's sign.sh refuses to keep a
+# signature by any other key: a keystore picked up by mistake on the key machine is caught there, before
+# anything reaches Play or GitHub. These are public; the keys are offline with the maintainer.
+#
+# app-signing and transparency are encri's as well (encri D115, D140); encri-api's FINGERPRINTS.md
+# publishes both. upload is this app's own, which Play takes for it from 7:03 PM on 2026-10-30, by the
+# Console's clock, by the reset requested on 2026-10-28; until then it takes only encri's, 460c9061...,
+# so no bundle signed for this file can be uploaded before that time (F9).
+#
+# Change a line only in the commit that records why the key changed.
+app-signing=ba30d5ee379521aaa4c4c738128ada6a294fac411fa479afb07d78b5ee4ccc49
+upload=5970d4b76e42ec12569c90a339942bcec6f328dcbf052d0ee0510878fd16e10a
+transparency=d22c1460e5517a2c517bbd83df00a5ca4c4dc1494a9317633a6201645f277265

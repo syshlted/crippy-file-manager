@@ -12,7 +12,9 @@ than restating it.
 held. The pre-push hook refuses a push while `../encri-api` is anywhere else. The Gradle wrapper and its distribution
 are held to the checksums gradle.org publishes. `scripts/release/reproduce.sh` builds the release twice from one
 commit, in two environments that differ on purpose, and says whether they came out the same; GitHub's CI runs it on
-every tag, and the maintainer's run must agree with CI's before anything is signed.
+every tag, and the maintainer's run must agree with CI's before anything is signed. `scripts/release/kit.sh` packs
+the build with what signs it, for the machine that holds the keys, whose `sign.sh` keeps no signature but by the three
+keys `config/release-certificates` names; `FINGERPRINTS.md` lists them.
 
 **Third-party notices (F10).** *Settings* ends with *Third-party notices*, which shows the copyright notices and
 licences of the libraries the app is built with, as their licences require of a binary distribution. A build fails

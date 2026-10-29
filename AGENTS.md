@@ -559,6 +559,41 @@ what it built for 90 days; the maintainer's run must give the same SHA-256s befo
 keep, and `dependenciesInfo.includeInApk = false` was there from F1. *Measured, 2026-10-29:* `27648e2` built the same
 twice, APK `568abcc2…`, bundle `cdb0983e…`, against encri-api `c27f139`.
 
+**Signed from a kit of this repository's own, on the key machine** (encri D141). `scripts/release/kit.sh`, `sign.sh`
+and `bundletool.init.gradle.kts` are encri's, for this app's files: the kit packs the reproduced build with
+apksigner and bundletool's jars, each pinned, and rehearses itself before it is kept; on the key machine `sign.sh`
+takes the directory holding the keystores, asks for each password at a terminal, signs the APK with the app signing
+key and the bundle with code transparency and then the upload key, holds both to the build, and keeps nothing signed
+by a key `config/release-certificates` does not name. `sign.sh --verify`, here, checks what comes back before the
+upload. The keystores are found as `encri-app-signing.p12` (`app-signing`) and `encri-transparency.p12`
+(`transparency`), the same two keys as encri's (encri D140), and `encri-files-upload.p12` (`encri-files-upload`);
+`ENCRI_UPLOAD_KEYSTORE` and `ENCRI_UPLOAD_KEY_ALIAS` name another, as for the other two.
+
+**The upload key is this app's own**, `59:70:D4:B7…`, which Play takes from 7:03 PM on 2026-10-30 by the Console's
+clock, when the reset requested on 2026-10-28 takes effect (encri D140). Until then Play takes only encri's
+`46:0C:90:61…` for this app, so no bundle this kit signs can be uploaded before that time, and the release waits for
+it rather than being signed with encri's key and leaving the reset unused.
+
+**On Play, the bundle needs the listing's automatic protection off** (encri D144): the bundle carries code
+transparency, which Play refuses beside it. **The signed APK goes to a GitHub release** (encri D142), and not before
+the trademark search encri D136 asks for before anything is published beyond testers.
+
+*Flagged for veto:* **a kit of this app's own rather than one kit for both apps**, which encri D141 left open.
+This repository is the one a stranger reads, so it carries everything its release is built and signed with; a kit
+names one app's files and expects one app's upload key; and encri's measured scripts are left as they are. What it
+costs: `reproduce.sh`, `compare-builds.py`, `kit.sh` and `sign.sh` are now in two repositories, and a fix to one has
+to be made to the other, as encri's B138 already is in both.
+
+*Measured, 2026-10-29,* with a kit of `27648e2` (21 MB) and three RSA-4096 scratch keystores under the names above:
+the kit rehearsed itself; a real signing through a pseudo-terminal asked three questions, one per tool; with keys the
+kit did not expect it failed with exit 1 and left no `signed/`; Ctrl-C at the third question, the terminal closed at
+the second or the third, SIGTERM to `sign.sh` at the second, and jarsigner killed at its question each ended with no
+`signed/` and no process left; and a kit expecting the scratch keys signed, its files the build but for alignment
+padding (all 19 entries) and signing's 4 bundle entries, and `--verify` passed them with that kit and failed them with
+the real one. *Seen once and not reproduced:* a `signed/` left holding the signed APK alone, when the terminal, `sign.sh`
+and bundletool were each sent SIGTERM at the same moment; `--verify` refuses such a directory for want of
+`SIGNED.txt`, and a second signing refuses to write over it.
+
 ### F10 — The third-party notices: written by hand, opened from the settings, and held to the build
 *2026-10-29 · accepted; owed before any APK leaves this machine, the internal testing track included (F9), for encri
 D138's reason. Nothing new is flagged: each choice is encri D138's, which the user confirmed, or F3's.*
