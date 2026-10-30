@@ -47,11 +47,13 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
   and this app's upload key; `FINGERPRINTS.md` is encri-api's, word for word in its tables.
 - ~~**A reproducible release build**, checked as encri's is (encri D116).~~ **Built 2026-10-29 (F9):**
   `reproduce.sh`, and `reproducible.yml` on every tag.
-- **Then, in order** (F9): the minified build walked through on an emulator against encri before it is signed (encri
-  D140); this repository pushed and its `master` protected (below); a signed `v0.1.0` tag, which CI builds; the
-  maintainer's `reproduce.sh v0.1.0` agreeing with CI's SHA-256s; the kit made and signed on the key machine, no
-  earlier than 7:03 PM on 2026-10-30, when Play takes this app's own upload key; `sign.sh --verify` here; and the
-  bundle uploaded to the internal testing track with the listing's automatic protection off (encri D144).
+- **Then, in order** (F9): ~~the minified build walked through on an emulator against encri before it is signed
+  (encri D140)~~ **done 2026-10-29**; ~~this repository pushed and its `master` protected (below)~~ **pushed
+  2026-10-30, and held by the ruleset it already had**; ~~the maintainer's build agreeing with CI's SHA-256s~~ **CI
+  built `6644860` on `master` the same as the maintainer, 2026-10-30, and the kit is made**; a signed `v0.1.0` tag on
+  `6644860`, which CI builds again; the kit signed on the key machine, no earlier than 7:03 PM on 2026-10-30, when
+  Play takes this app's own upload key; `sign.sh --verify` here; and the bundle uploaded to the internal testing
+  track with the listing's automatic protection off (encri D144).
 - ~~**A registry entry** in encri-api's `registry/` once this app has a release key (encri D114, D122).~~ **Done
   2026-10-28** as encri-api's L22, under the app signing key's certificate; the pin names that commit (F9).
 
@@ -60,8 +62,11 @@ app. What follows is encri's step 13 for the file manager (encri D112 to D118, D
 - ~~**encri-api's rename must be on GitHub first.** CI checks encri-api's `master` out beside this one, and
   that `master` predates the rename (encri-api L19), so every job fails to build until it is pushed.~~ **Done:**
   encri-api was pushed on 2026-10-29 at `c27f139`, and CI now fetches the commit `config/encri-api.pin` names (F9).
-- **Branch protection on `master`**, as encri-api lists it: signed commits, a review, `ci` and
-  `commit-policy` required, no force push, merge commits or rebases only.
+- **Branch protection on `master`**, as encri-api lists it: ~~signed commits~~, a review, `ci` and
+  `commit-policy` required, ~~no force push~~, merge commits or rebases only. **In part, 2026-10-30:** the ruleset
+  *Protect default branch* refuses a deletion, a force push and an unsigned commit, with no one to bypass it, which is
+  what the user asked for. A review and required checks would make a maintainer working alone open a pull request
+  for every change, so they wait for a second maintainer.
 - **CodeQL and dependency scanning**, carried across from encri-api (its L7 and L10), which this
   repository does not have yet.
 

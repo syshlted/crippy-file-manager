@@ -27,6 +27,10 @@ deleting, sharing, opening with another app, a preview, and locking. Nothing cra
 **Bug found and fixed before it shipped.** The *Third-party notices* row in the settings was drawn in the grey of the
 explanations around it, so it did not look like something to press. It is drawn as the switches are now.
 
+**Pushed (F9), 2026-10-30.** The repository is on GitHub, its `master` held by a ruleset against deletion, force pushes
+and unsigned commits. GitHub's CI built the release from `6644860` and got the same two files, byte for byte, as the
+maintainer's two builds: APK `7d447874…`, bundle `857967e6…`. The kit that signs them is made.
+
 ### A copy that carries on — 2026-10-23
 
 **Completed (F8).** A copy into or out of the vault runs behind a foreground service and a notification, so it carries

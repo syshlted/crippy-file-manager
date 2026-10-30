@@ -26,7 +26,9 @@ and opens a document with another app through a handoff (F2). Since then it has 
 with a switch for screenshots (F3) and one for previews (F4), and it makes folders and renames, moves and
 deletes what is in the vault (F5). It copies files in from the system's picker and copies a document out to a
 place the user picks (F6), and shares a document through the share sheet (F7). A copy runs behind a foreground
-service, so it carries on when the user leaves the app (F8). Nothing is pushed, and nothing has been released.
+service, so it carries on when the user leaves the app (F8). It shows the third-party notices from the settings
+(F10). **Pushed to GitHub on 2026-10-30**, where CI built the release and agreed with the maintainer's build; its
+first release, 0.1.0 for Google Play's internal testing track, is waiting to be signed (F9).
 
 ## Relationship to encri and encri-api
 
@@ -606,6 +608,13 @@ padding (all 19 entries) and signing's 4 bundle entries, and `--verify` passed t
 the real one. *Seen once and not reproduced:* a `signed/` left holding the signed APK alone, when the terminal,
 `sign.sh` and bundletool were each sent SIGTERM at the same moment; `--verify` refuses such a directory for want of
 `SIGNED.txt`, and a second signing refuses to write over it.
+
+*Measured, 2026-10-30,* the release itself: `6644860` built the same twice here (APK `7d447874…`, bundle `857967e6…`),
+was pushed, and `reproducible.yml`, run by hand on `master` at that commit, built the same two files on GitHub's runner
+with another JDK (Adoptium 21.0.13 to this machine's Debian 21.0.12.1) and another kernel; the kit of it, 21 MB,
+rehearsed itself. The repository's `master` was already held by a ruleset, *Protect default branch*: no deletion, no
+force push, signed commits, and no one who may bypass it. The first push replaced GitHub's *Initial commit*, a
+LICENSE alone, so the ruleset was turned off for that one push at the user's word and turned back on unchanged.
 
 ### F10 — The third-party notices: written by hand, opened from the settings, and held to the build
 *2026-10-29 · accepted; owed before any APK leaves this machine, the internal testing track included (F9), for encri
